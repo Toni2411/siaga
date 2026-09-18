@@ -1,0 +1,180 @@
+# Stack SIAGA.
+#
+# Tiga kelompok layanan: ERPNext beserta pendukungnya, penyimpanan time series,
+# dan message broker. Hanya frontend yang membuka port ke luar.
+#
+# Semua container ERPNext memakai image kustom yang sudah memuat app siaga,
+# lalu folder app di-bind-mount supaya perubahan kode langsung terbaca.
+
+x-erpnext: &erpnext
+  image: siaga/erpnext:${ERPNEXT_VERSION:-v15}
+  build:
+    context: .
+    dockerfile: docker/erpnext/Dockerfile
+    args:
+      ERPNEXT_VERSION: ${ERPNEXT_VERSION:-v15}
+  restart: unless-stopped
+  volumes:
+    - sites:/home/frappe/frappe-bench/sites
+    - logs:/home/frappe/frappe-bench/logs
+    - ./apps/siaga:/home/frappe/frappe-bench/apps/siaga
+
+services:
+  # ---------- ERPNext ----------
+
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-admin}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 20
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis-cache:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-cache-data:/data
+
+  redis-queue:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-queue-data:/data
+
+  configurator:
+    <<: *erpnext
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host db;
+        bench set-config -gp db_port 3306;
+        bench set-config -g redis_cache "redis://redis-cache:6379";
+        bench set-config -g redis_queue "redis://redis-queue:6379";
+        bench set-config -g redis_socketio "redis://redis-queue:6379";
+        bench set-config -gp socketio_port 9000;
+    depends_on:
+      db:
+        condition: service_healthy
+
+  create-site:
+    <<: *erpnext
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        wait-for-it -t 180 db:3306;
+        wait-for-it -t 180 redis-cache:6379;
+        wait-for-it -t 180 redis-queue:6379;
+        if [ -d "sites/${SITE_NAME:-siaga.localhost}" ]; then
+          echo "site sudah ada, dilewati";
+          exit 0;
+        fi;
+        bench new-site --no-mariadb-socket --mariadb-user-host-login-scope=% --db-root-password=${DB_ROOT_PASSWORD:-admin} --admin-password=${ADMIN_PASSWORD:-admin} --install-app erpnext --set-default ${SITE_NAME:-siaga.localhost};
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+
+  backend:
+    <<: *erpnext
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+
+  websocket:
+    <<: *erpnext
+    command: ["node", "/home/frappe/frappe-bench/apps/frappe/socketio.js"]
+    depends_on:
+      backend:
+        condition: service_started
+
+  queue-short:
+    <<: *erpnext
+    command: ["bench", "worker", "--queue", "short,default"]
+    depends_on:
+      backend:
+        condition: service_started
+
+  queue-long:
+    <<: *erpnext
+    command: ["bench", "worker", "--queue", "long,default,short"]
+    depends_on:
+      backend:
+        condition: service_started
+
+  scheduler:
+    <<: *erpnext
+    command: ["bench", "schedule"]
+    depends_on:
+      backend:
+        condition: service_started
+
+  frontend:
+    <<: *erpnext
+    command: ["nginx-entrypoint.sh"]
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:-siaga.localhost}
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: "120"
+      CLIENT_MAX_BODY_SIZE: 50m
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_started
+      websocket:
+        condition: service_started
+
+  # ---------- Time series ----------
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TIMESCALE_USER:-siaga}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:-siaga}
+      POSTGRES_DB: ${TIMESCALE_DB:-siaga_ts}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER:-siaga}"]
+      interval: 10s
+      retries: 10
+    volumes:
+      - ts-data:/var/lib/postgresql/data
+      - ./docker/timescale/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${TIMESCALE_PORT:-5432}:5432"
+
+  # ---------- Messaging ----------
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./docker/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+
+volumes:
+  sites:
+  logs:
+  db-data:
+  redis-cache-data:
+  redis-queue-data:
+  ts-data:
+  mosquitto-data:

@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+.env
+sites/
+logs/
+
+# Dataset diunduh lewat skrip, tidak ikut masuk repo
+data/raw/
+data/cache/
+*.rar
+*.zip
+
+.vscode/
+.idea/
+Thumbs.db
