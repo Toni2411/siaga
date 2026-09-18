@@ -1,0 +1,172 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2026-09-18 20:58:27.631540",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "asset",
+  "scored_at",
+  "score",
+  "column_break_4ln0",
+  "operating_state",
+  "confidence",
+  "model_version",
+  "anomaly_score",
+  "proyeksi_section",
+  "days_to_threshold",
+  "column_break_hpfx",
+  "projection_low",
+  "projection_high",
+  "penjelasan_pemicu_section",
+  "trigger_summary",
+  "top_features"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "reqd": 1
+  },
+  {
+   "fieldname": "scored_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Waktu",
+   "reqd": 1
+  },
+  {
+   "description": "0 sampai 100, semakin rendah semakin buruk",
+   "fieldname": "score",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Skor Kesehatan",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_4ln0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "operating_state",
+   "fieldtype": "Select",
+   "label": "Kondisi Operasi",
+   "options": "mati\nstart\nstabil\nberbeban"
+  },
+  {
+   "fieldname": "confidence",
+   "fieldtype": "Percent",
+   "label": "Keyakinan Model"
+  },
+  {
+   "fieldname": "model_version",
+   "fieldtype": "Data",
+   "label": "Versi Model"
+  },
+  {
+   "fieldname": "anomaly_score",
+   "fieldtype": "Float",
+   "label": "Skor Anomali Mentah"
+  },
+  {
+   "fieldname": "proyeksi_section",
+   "fieldtype": "Section Break",
+   "label": "Proyeksi"
+  },
+  {
+   "fieldname": "days_to_threshold",
+   "fieldtype": "Float",
+   "label": "Proyeksi Hari ke Ambang"
+  },
+  {
+   "fieldname": "column_break_hpfx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "projection_low",
+   "fieldtype": "Float",
+   "label": "Batas Bawah (hari)"
+  },
+  {
+   "fieldname": "projection_high",
+   "fieldtype": "Float",
+   "label": "Batas Atas (hari)"
+  },
+  {
+   "fieldname": "penjelasan_pemicu_section",
+   "fieldtype": "Section Break",
+   "label": "Penjelasan Pemicu"
+  },
+  {
+   "fieldname": "trigger_summary",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Ringkasan Pemicu"
+  },
+  {
+   "description": "Daftar ciri beserta seberapa jauh menyimpang dari baseline",
+   "fieldname": "top_features",
+   "fieldtype": "JSON",
+   "label": "Ciri yang Menyimpang"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 20:58:27.631540",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Health Score",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "scored_at",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

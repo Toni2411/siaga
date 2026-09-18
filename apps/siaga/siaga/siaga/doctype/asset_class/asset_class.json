@@ -1,0 +1,236 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:class_name",
+ "creation": "2026-09-18 20:58:13.999739",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "class_name",
+  "description",
+  "column_break_rxbn",
+  "monitoring_enabled",
+  "sample_rate_hz",
+  "feature_schema_version",
+  "operasi_dan_geometri_bearing_section",
+  "rpm_nominal",
+  "rolling_elements",
+  "ball_diameter_mm",
+  "pitch_diameter_mm",
+  "contact_angle_deg",
+  "column_break_qnkx",
+  "bpfo_hz",
+  "bpfi_hz",
+  "bsf_hz",
+  "ftf_hz",
+  "ambang_dan_baseline_section",
+  "threshold_trigger",
+  "threshold_recover",
+  "consecutive_cycles",
+  "column_break_rl1y",
+  "baseline_days",
+  "part_kandidat_per_gejala_section",
+  "candidate_parts"
+ ],
+ "fields": [
+  {
+   "fieldname": "class_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nama Kelas",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Deskripsi"
+  },
+  {
+   "fieldname": "column_break_rxbn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Kalau mati, aset kelas ini tetap tercatat tapi tidak dinilai",
+   "fieldname": "monitoring_enabled",
+   "fieldtype": "Check",
+   "label": "Pemantauan Aktif"
+  },
+  {
+   "default": "3200",
+   "fieldname": "sample_rate_hz",
+   "fieldtype": "Int",
+   "label": "Laju Cuplik (Hz)"
+  },
+  {
+   "default": "1",
+   "fieldname": "feature_schema_version",
+   "fieldtype": "Int",
+   "label": "Versi Skema Ciri"
+  },
+  {
+   "fieldname": "operasi_dan_geometri_bearing_section",
+   "fieldtype": "Section Break",
+   "label": "Operasi dan Geometri Bearing"
+  },
+  {
+   "fieldname": "rpm_nominal",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "RPM Nominal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "rolling_elements",
+   "fieldtype": "Int",
+   "label": "Jumlah Elemen Gelinding"
+  },
+  {
+   "fieldname": "ball_diameter_mm",
+   "fieldtype": "Float",
+   "label": "Diameter Bola (mm)"
+  },
+  {
+   "fieldname": "pitch_diameter_mm",
+   "fieldtype": "Float",
+   "label": "Diameter Pitch (mm)"
+  },
+  {
+   "default": "0",
+   "fieldname": "contact_angle_deg",
+   "fieldtype": "Float",
+   "label": "Sudut Kontak (derajat)"
+  },
+  {
+   "fieldname": "column_break_qnkx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Dihitung dari geometri saat disimpan",
+   "fieldname": "bpfo_hz",
+   "fieldtype": "Float",
+   "label": "BPFO (Hz)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bpfi_hz",
+   "fieldtype": "Float",
+   "label": "BPFI (Hz)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bsf_hz",
+   "fieldtype": "Float",
+   "label": "BSF (Hz)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ftf_hz",
+   "fieldtype": "Float",
+   "label": "FTF (Hz)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ambang_dan_baseline_section",
+   "fieldtype": "Section Break",
+   "label": "Ambang dan Baseline"
+  },
+  {
+   "default": "40",
+   "description": "Work order terbit saat skor turun di bawah ini",
+   "fieldname": "threshold_trigger",
+   "fieldtype": "Float",
+   "label": "Ambang Pemicu"
+  },
+  {
+   "default": "55",
+   "description": "Dianggap pulih hanya setelah skor naik melewati ini (histeresis)",
+   "fieldname": "threshold_recover",
+   "fieldtype": "Float",
+   "label": "Ambang Pulih"
+  },
+  {
+   "default": "3",
+   "fieldname": "consecutive_cycles",
+   "fieldtype": "Int",
+   "label": "Siklus Berturut-turut"
+  },
+  {
+   "fieldname": "column_break_rl1y",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "description": "Lama pengumpulan data sehat sebelum model per unit dilatih",
+   "fieldname": "baseline_days",
+   "fieldtype": "Int",
+   "label": "Periode Baseline (hari)"
+  },
+  {
+   "fieldname": "part_kandidat_per_gejala_section",
+   "fieldtype": "Section Break",
+   "label": "Part Kandidat per Gejala"
+  },
+  {
+   "fieldname": "candidate_parts",
+   "fieldtype": "Table",
+   "label": "Part Kandidat",
+   "options": "Asset Class Candidate Part"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 20:58:13.999739",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Asset Class",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

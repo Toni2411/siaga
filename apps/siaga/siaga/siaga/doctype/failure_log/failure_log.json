@@ -1,0 +1,147 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:FL-{#####}",
+ "creation": "2026-09-18 20:58:27.925999",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "asset",
+  "component",
+  "failed_on",
+  "column_break_8bvx",
+  "failure_mode",
+  "confirmed_by_mechanic",
+  "akar_masalah_dan_label_section",
+  "root_cause",
+  "column_break_bjhe",
+  "training_label",
+  "section_break_pkoj",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "reqd": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Komponen",
+   "options": "Asset Component"
+  },
+  {
+   "fieldname": "failed_on",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Tanggal Rusak",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_8bvx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "failure_mode",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Mode Kegagalan",
+   "options": "Bearing outer race\nBearing inner race\nBearing elemen gelinding\nUnbalance\nMisalignment\nKelonggaran dudukan\nSeal bocor\nImpeller aus\nMotor\nLainnya"
+  },
+  {
+   "default": "0",
+   "fieldname": "confirmed_by_mechanic",
+   "fieldtype": "Check",
+   "label": "Dikonfirmasi Mekanik"
+  },
+  {
+   "fieldname": "akar_masalah_dan_label_section",
+   "fieldtype": "Section Break",
+   "label": "Akar Masalah dan Label"
+  },
+  {
+   "fieldname": "root_cause",
+   "fieldtype": "Small Text",
+   "label": "Akar Masalah"
+  },
+  {
+   "fieldname": "column_break_bjhe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Label untuk pelatihan ulang, misal bpfo, bpfi, unbalance",
+   "fieldname": "training_label",
+   "fieldtype": "Data",
+   "label": "Label Pelatihan"
+  },
+  {
+   "fieldname": "section_break_pkoj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Catatan"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 20:58:27.925999",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Failure Log",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

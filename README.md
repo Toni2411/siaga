@@ -14,12 +14,12 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 1 dari 8 selesai.
+Minggu 2 dari 8 selesai.
 
 | Bagian | Status |
 | --- | --- |
 | Stack Docker: ERPNext v15, TimescaleDB, Mosquitto | Jalan, semua layanan terverifikasi |
-| Custom app `siaga` | Terpasang di site, DocType menyusul minggu 2 |
+| Custom app `siaga` | 6 DocType, field tambahan di Asset, workspace, seed demo |
 | Virtual edge, DSP dan ekstraksi ciri | Selesai, 22 tes lolos |
 | Replay service | Belum |
 | AI service | Belum |
@@ -48,6 +48,12 @@ docker compose up -d --build    # unduhan pertama kali sekitar 7 GB
 Pemasangan ERPNext ke database baru memakan beberapa menit. Setelah itu buka
 `http://localhost:8080`, login sebagai `Administrator` dengan password dari
 `.env`, dan selesaikan setup wizard.
+
+Lalu isi data demo, yang membuat kelas alat pertama beserta aset contohnya:
+
+```bash
+python scripts/seed_demo.py
+```
 
 App `siaga` dibangun ke dalam image supaya worker dan scheduler juga
 memuatnya, lalu foldernya di-bind-mount sehingga perubahan kode Python

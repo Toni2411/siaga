@@ -1,0 +1,180 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:asset",
+ "creation": "2026-09-18 20:58:27.214331",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "asset",
+  "asset_class",
+  "column_break_zqhe",
+  "data_source_id",
+  "monitoring_status",
+  "baseline_dan_model_section",
+  "baseline_started_on",
+  "baseline_completed_on",
+  "column_break_nujy",
+  "model_version",
+  "model_trained_on",
+  "skor_terakhir_section",
+  "last_score",
+  "column_break_nhdu",
+  "last_score_at",
+  "section_break_uybb",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "asset.asset_class",
+   "fieldname": "asset_class",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Kelas Alat",
+   "options": "Asset Class",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_zqhe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Id yang dipakai edge di topik MQTT, misal PUMP-01",
+   "fieldname": "data_source_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Id Sumber Data"
+  },
+  {
+   "default": "Belum terdaftar",
+   "fieldname": "monitoring_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status Pemantauan",
+   "options": "Belum terdaftar\nMengumpulkan baseline\nDipantau\nDitangguhkan"
+  },
+  {
+   "fieldname": "baseline_dan_model_section",
+   "fieldtype": "Section Break",
+   "label": "Baseline dan Model"
+  },
+  {
+   "fieldname": "baseline_started_on",
+   "fieldtype": "Datetime",
+   "label": "Baseline Mulai"
+  },
+  {
+   "fieldname": "baseline_completed_on",
+   "fieldtype": "Datetime",
+   "label": "Baseline Selesai"
+  },
+  {
+   "fieldname": "column_break_nujy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "model_version",
+   "fieldtype": "Data",
+   "label": "Versi Model"
+  },
+  {
+   "fieldname": "model_trained_on",
+   "fieldtype": "Datetime",
+   "label": "Model Dilatih"
+  },
+  {
+   "fieldname": "skor_terakhir_section",
+   "fieldtype": "Section Break",
+   "label": "Skor Terakhir"
+  },
+  {
+   "fieldname": "last_score",
+   "fieldtype": "Float",
+   "label": "Skor Terakhir",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_nhdu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_score_at",
+   "fieldtype": "Datetime",
+   "label": "Waktu Skor Terakhir",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_uybb",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Catatan"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 20:58:27.214331",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Asset Monitoring Profile",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

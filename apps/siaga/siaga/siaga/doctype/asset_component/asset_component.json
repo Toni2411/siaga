@@ -1,0 +1,149 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:COMP-{#####}",
+ "creation": "2026-09-18 20:58:26.816409",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "asset",
+  "component_type",
+  "component_name",
+  "column_break_flcn",
+  "status",
+  "item",
+  "umur_section",
+  "installed_on",
+  "design_life_hours",
+  "column_break_n5gp",
+  "replaced_on",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "reqd": 1
+  },
+  {
+   "fieldname": "component_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Jenis Komponen",
+   "options": "Bearing DE\nBearing NDE\nImpeller\nSeal mekanik\nCoupling\nMotor\nLainnya",
+   "reqd": 1
+  },
+  {
+   "fieldname": "component_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nama Komponen"
+  },
+  {
+   "fieldname": "column_break_flcn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Terpasang",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Terpasang\nDiganti\nRusak"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "label": "Item Spare Part",
+   "options": "Item"
+  },
+  {
+   "fieldname": "umur_section",
+   "fieldtype": "Section Break",
+   "label": "Umur"
+  },
+  {
+   "fieldname": "installed_on",
+   "fieldtype": "Date",
+   "label": "Tanggal Pasang"
+  },
+  {
+   "fieldname": "design_life_hours",
+   "fieldtype": "Int",
+   "label": "Umur Desain (jam)"
+  },
+  {
+   "fieldname": "column_break_n5gp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "replaced_on",
+   "fieldtype": "Date",
+   "label": "Tanggal Diganti"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Catatan"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 20:58:26.816409",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Asset Component",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
