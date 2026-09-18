@@ -170,6 +170,43 @@ services:
     ports:
       - "${MQTT_PORT:-1883}:1883"
 
+  # ---------- Service SIAGA ----------
+
+  gateway:
+    image: siaga/services
+    build:
+      context: .
+      dockerfile: services/Dockerfile
+    command: ["python", "-m", "siaga_gateway"]
+    restart: unless-stopped
+    environment:
+      SIAGA_MQTT_URL: mqtt://mosquitto:1883
+      SIAGA_TIMESCALE_DSN: postgresql://${TIMESCALE_USER:-siaga}:${TIMESCALE_PASSWORD:-siaga}@timescaledb:5432/${TIMESCALE_DB:-siaga_ts}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
+  # Virtual edge memutar dataset lalu berhenti. Ada di profile "replay" supaya
+  # tidak ikut jalan tiap docker compose up, karena tiap putaran menghasilkan
+  # riwayat baru dengan cap waktu bergeser. Jalankan dengan:
+  #   docker compose --profile replay up edge
+  edge:
+    image: siaga/services
+    profiles: ["replay"]
+    command: ["python", "-m", "siaga_edge"]
+    restart: "no"
+    environment:
+      SIAGA_MQTT_URL: mqtt://mosquitto:1883
+      SIAGA_CACHE: /data/cache/ims_2nd_test_3200hz.npz
+      SIAGA_REPLAY_SPEED: ${REPLAY_SPEED:-600}
+    volumes:
+      - ./data/cache:/data/cache:ro
+    depends_on:
+      gateway:
+        condition: service_started
+
 volumes:
   sites:
   logs:

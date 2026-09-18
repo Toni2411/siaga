@@ -33,6 +33,10 @@ class AssetClassConfig:
     defect_harmonics: int = 2
     order_tolerance_hz: float = 3.0
 
+    # Di bawah RMS ini alat dianggap mati. Skor anomali tidak dihitung pada
+    # kondisi mati, karena sinyalnya hanya derau sensor.
+    off_rms_threshold_g: float = 0.005
+
     @property
     def shaft_hz(self) -> float:
         return self.rpm / 60.0

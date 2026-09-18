@@ -14,25 +14,26 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 2 dari 8 selesai.
+Minggu 3 dari 8 selesai.
 
 | Bagian | Status |
 | --- | --- |
 | Stack Docker: ERPNext v15, TimescaleDB, Mosquitto | Jalan, semua layanan terverifikasi |
 | Custom app `siaga` | 6 DocType, field tambahan di Asset, workspace, seed demo |
-| Virtual edge, DSP dan ekstraksi ciri | Selesai, 22 tes lolos |
-| Replay service | Belum |
-| AI service | Belum |
+| Virtual edge: replay dataset IMS, DSP, ekstraksi ciri, MQTT | Jalan di Docker, 46 tes |
+| Gateway: MQTT ke TimescaleDB | Jalan di Docker, ~400 pesan/detik |
+| Grafik tren di ERPNext | Minggu 4 |
+| AI service | Minggu 5 |
 
 ## Menjalankan tes
 
-Satu satunya bagian yang bisa dicoba sekarang, dan tidak butuh Docker.
+Tidak butuh Docker.
 
 ```bash
 python -m venv .venv
-.venv/Scripts/python.exe -m pip install numpy pytest   # Linux/macOS: .venv/bin/python
-cd services/edge
-../../.venv/Scripts/python.exe -m pytest -q
+.venv/Scripts/python.exe -m pip install -e services/edge -e services/gateway pytest   # Linux/macOS: .venv/bin/python
+cd services/edge   && ../../.venv/Scripts/python.exe -m pytest -q
+cd ../gateway      && ../../.venv/Scripts/python.exe -m pytest -q
 ```
 
 ## Menjalankan stack
@@ -55,6 +56,31 @@ Lalu isi data demo, yang membuat kelas alat pertama beserta aset contohnya:
 python scripts/seed_demo.py
 ```
 
+## Mengalirkan data
+
+Sumber getaran v1 adalah dataset bearing IMS dari NASA Prognostics Center of
+Excellence: empat bearing pada satu poros 2000 RPM, direkam tiap sepuluh
+menit sampai bearing 1 rusak di outer race setelah tujuh hari. Skrip berikut
+mengunduh (1 GB), membongkar tiga lapis arsip, menurunkan laju cuplik ke
+3.2 kHz, dan menyimpan cache 45 MB. Butuh scipy, pandas, py7zr, dan alat
+pembuka rar (tar bawaan Windows 11 cukup).
+
+```bash
+.venv/Scripts/python.exe -m pip install scipy pandas py7zr
+.venv/Scripts/python.exe scripts/prepare_dataset.py
+```
+
+Gateway sudah hidup bersama stack. Untuk memutar dataset lewat MQTT:
+
+```bash
+docker compose --profile replay up edge          # 7 hari data dalam 16 menit
+REPLAY_SPEED=0 docker compose --profile replay run --rm edge   # tanpa jeda, sekitar 10 detik
+```
+
+Tiap putaran memasang cap waktu virtual yang berakhir sekarang, jadi replay
+ulang menghasilkan riwayat kedua yang bergeser. Kosongkan dulu dengan
+`scripts/reset_timeseries.sh`.
+
 App `siaga` dibangun ke dalam image supaya worker dan scheduler juga
 memuatnya, lalu foldernya di-bind-mount sehingga perubahan kode Python
 langsung terbaca. Kalau `hooks.py` atau DocType berubah, jalankan
@@ -64,11 +90,12 @@ langsung terbaca. Kalau `hooks.py` atau DocType berubah, jalankan
 
 ```
 apps/siaga/          custom app Frappe, berjalan di dalam ERPNext
-services/edge/       virtual edge: DSP dan ekstraksi ciri dari gelombang mentah
-services/replay/     pemutar dataset run to failure jadi aliran waktu nyata
-services/ai/         deteksi anomali, skor kesehatan, pemicu work order
+services/edge/       virtual edge: replay dataset, DSP, ekstraksi ciri, penerbit MQTT
+services/gateway/    pelanggan MQTT yang menulis ke TimescaleDB
+services/ai/         deteksi anomali, skor kesehatan, pemicu work order (minggu 5)
 docker/              konfigurasi Mosquitto dan skema TimescaleDB
-scripts/             utilitas pemasangan
+scripts/             penyiapan dataset, seed demo, utilitas
+data/                dataset dan cache, tidak masuk git
 ```
 
 ## Virtual edge
@@ -92,7 +119,19 @@ langsung di ESP-DSP. Versi Python ini jadi rujukan kebenaran saat porting ke
 C++: firmware dianggap lulus kalau menghasilkan angka yang sama untuk gelombang
 uji yang sama.
 
-Contoh perilakunya, cacat outer race yang disuntikkan bertahap:
+Pesan MQTT-nya adalah kontrak: `siaga_edge/message.py` mendefinisikan dan
+memvalidasinya, gateway menolak apa pun yang tidak lolos, dan firmware v1.5
+harus menghasilkan pesan yang sama. Dua kanal skalar, arus dan suhu, tidak
+ada di dataset dan diisi nilai nominal berderau; pesan menandainya
+`synthetic` supaya tidak ada yang mengira itu pengukuran.
+
+Pada data IMS sungguhan, energi BPFO bearing 1 stabil selama lima hari lalu
+naik tiga kali lipat dalam dua jam terakhir sebelum rig dimatikan, sementara
+bearing 2 di poros yang sama ikut naik belakangan dan lebih lemah. Dua
+cuplikan terakhir terbaca `mati` karena RMS-nya nol, yang menjadi alasan
+gating kondisi operasi.
+
+Contoh perilakunya pada sinyal sintetis, cacat outer race yang disuntikkan bertahap:
 
 | ciri | sehat | awal | berkembang |
 | --- | --- | --- | --- |
