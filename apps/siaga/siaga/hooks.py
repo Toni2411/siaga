@@ -16,6 +16,9 @@ fixtures = [
     {"dt": "Property Setter", "filters": [["module", "=", "SIAGA"]]},
 ]
 
+# JS tambahan untuk DocType bawaan: grafik tren kondisi di form Asset.
+doctype_js = {"Asset": "public/js/asset.js"}
+
 # Diisi di minggu 6, saat webhook penutupan work order mulai mengalir balik ke
 # AI service sebagai label pelatihan.
 doc_events = {}

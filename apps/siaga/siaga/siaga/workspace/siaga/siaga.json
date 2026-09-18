@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pemantauan Kondisi</b></span>\", \"col\": 12}}, {\"id\": \"s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Aset\", \"col\": 3}}, {\"id\": \"s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Profil Pemantauan\", \"col\": 3}}, {\"id\": \"s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Skor Kesehatan\", \"col\": 3}}, {\"id\": \"s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Kelas Alat\", \"col\": 3}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"h2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Master dan Riwayat</b></span>\", \"col\": 12}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Aset dan Kelas\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Riwayat Kondisi\", \"col\": 4}}]",
+ "content": "[{\"id\": \"h1\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pemantauan Kondisi</b></span>\", \"col\": 12}}, {\"id\": \"s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Aset\", \"col\": 3}}, {\"id\": \"s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Profil Pemantauan\", \"col\": 3}}, {\"id\": \"s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Skor Kesehatan\", \"col\": 3}}, {\"id\": \"s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Work Order\", \"col\": 3}}, {\"id\": \"s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Kelas Alat\", \"col\": 3}}, {\"id\": \"sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"h2\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Master dan Riwayat</b></span>\", \"col\": 12}}, {\"id\": \"c1\", \"type\": \"card\", \"data\": {\"card_name\": \"Aset dan Kelas\", \"col\": 4}}, {\"id\": \"c2\", \"type\": \"card\", \"data\": {\"card_name\": \"Riwayat Kondisi\", \"col\": 4}}, {\"id\": \"c3\", \"type\": \"card\", \"data\": {\"card_name\": \"Pekerjaan\", \"col\": 4}}]",
  "creation": "2026-09-18 21:00:47.343931",
  "custom_blocks": [],
  "docstatus": 0,
@@ -89,9 +89,48 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Pekerjaan",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "SIAGA Work Order",
+   "link_count": 0,
+   "link_to": "SIAGA Work Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Part Reservation",
+   "link_count": 0,
+   "link_to": "Part Reservation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Material Request",
+   "link_count": 0,
+   "link_to": "Material Request",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-09-18 21:00:47.343931",
+ "modified": "2026-09-19 06:48:16.187411",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "SIAGA",
@@ -128,6 +167,13 @@
    "doc_view": "",
    "label": "Kelas Alat",
    "link_to": "Asset Class",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "",
+   "label": "Work Order",
+   "link_to": "SIAGA Work Order",
    "type": "DocType"
   }
  ],

@@ -22,6 +22,7 @@
   "projection_high",
   "penjelasan_pemicu_section",
   "trigger_summary",
+  "work_order",
   "top_features"
  ],
  "fields": [
@@ -114,12 +115,19 @@
    "fieldname": "top_features",
    "fieldtype": "JSON",
    "label": "Ciri yang Menyimpang"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order Terpicu",
+   "options": "SIAGA Work Order",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 20:58:27.631540",
+ "modified": "2026-09-18 21:46:35.430712",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Health Score",

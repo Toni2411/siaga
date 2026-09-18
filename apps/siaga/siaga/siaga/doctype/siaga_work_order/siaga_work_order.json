@@ -1,0 +1,310 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:WO-{YYYY}-{#####}",
+ "creation": "2026-09-18 21:46:33.625186",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "asset",
+  "asset_name",
+  "asset_class",
+  "component",
+  "column_break_xemn",
+  "status",
+  "priority",
+  "trigger_source",
+  "due_date",
+  "assigned_to",
+  "pemicu_section",
+  "health_score",
+  "confidence",
+  "days_to_threshold",
+  "column_break_owxi",
+  "trigger_summary",
+  "pekerjaan_section",
+  "description",
+  "spare_part_section",
+  "warehouse",
+  "parts",
+  "material_request",
+  "hasil_section",
+  "started_on",
+  "completed_on",
+  "column_break_pbsa",
+  "failure_log",
+  "completion_notes",
+  "section_break_zosa",
+  "amended_from",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Judul",
+   "reqd": 1
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "asset.asset_name",
+   "fieldname": "asset_name",
+   "fieldtype": "Data",
+   "label": "Nama Aset",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "asset.asset_class",
+   "fieldname": "asset_class",
+   "fieldtype": "Link",
+   "label": "Kelas Alat",
+   "options": "Asset Class",
+   "read_only": 1
+  },
+  {
+   "fieldname": "component",
+   "fieldtype": "Link",
+   "label": "Komponen",
+   "options": "Asset Component"
+  },
+  {
+   "fieldname": "column_break_xemn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nTerbuka\nDikerjakan\nSelesai\nDibatalkan",
+   "read_only": 1
+  },
+  {
+   "default": "Sedang",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Prioritas",
+   "options": "Rendah\nSedang\nTinggi\nKritis",
+   "reqd": 1
+  },
+  {
+   "default": "Manual",
+   "fieldname": "trigger_source",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Sumber Pemicu",
+   "options": "Manual\nOtomatis",
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Target Selesai"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Ditugaskan ke",
+   "options": "User"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "pemicu_section",
+   "fieldtype": "Section Break",
+   "label": "Pemicu"
+  },
+  {
+   "fieldname": "health_score",
+   "fieldtype": "Link",
+   "label": "Skor Kesehatan Pemicu",
+   "options": "Health Score",
+   "read_only": 1
+  },
+  {
+   "fieldname": "confidence",
+   "fieldtype": "Percent",
+   "label": "Keyakinan Model",
+   "read_only": 1
+  },
+  {
+   "fieldname": "days_to_threshold",
+   "fieldtype": "Float",
+   "label": "Proyeksi Hari ke Ambang",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_owxi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "trigger_summary",
+   "fieldtype": "Small Text",
+   "label": "Alasan Pemicu",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pekerjaan_section",
+   "fieldtype": "Section Break",
+   "label": "Pekerjaan"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Uraian Pekerjaan"
+  },
+  {
+   "fieldname": "spare_part_section",
+   "fieldtype": "Section Break",
+   "label": "Spare Part"
+  },
+  {
+   "description": "Dipakai untuk baris part yang gudangnya kosong",
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Gudang Sumber",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "parts",
+   "fieldtype": "Table",
+   "label": "Part yang Dibutuhkan",
+   "options": "SIAGA Work Order Part"
+  },
+  {
+   "description": "Terisi otomatis kalau stok setelah reservasi jatuh di bawah titik pesan ulang",
+   "fieldname": "material_request",
+   "fieldtype": "Link",
+   "label": "Material Request Terbit",
+   "options": "Material Request",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hasil_section",
+   "fieldtype": "Section Break",
+   "label": "Hasil"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "started_on",
+   "fieldtype": "Datetime",
+   "label": "Mulai Dikerjakan"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Selesai"
+  },
+  {
+   "fieldname": "column_break_pbsa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "failure_log",
+   "fieldtype": "Link",
+   "label": "Catatan Kerusakan",
+   "options": "Failure Log",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "completion_notes",
+   "fieldtype": "Small Text",
+   "label": "Catatan Penyelesaian"
+  },
+  {
+   "fieldname": "section_break_zosa",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SIAGA Work Order",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "SIAGA Work Order",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-18 21:46:33.625186",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "SIAGA Work Order",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

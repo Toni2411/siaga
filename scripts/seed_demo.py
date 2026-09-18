@@ -99,6 +99,41 @@ def main():
         "is_stock_item": 1,
     })
 
+    print("== Gudang site dan stok awal")
+    abbr = get("Company", COMPANY)["abbr"]
+    warehouse = ensure("Warehouse", "Gudang Site A - %s" % abbr, {
+        "warehouse_name": "Gudang Site A",
+        "company": COMPANY,
+        "parent_warehouse": "All Warehouses - %s" % abbr,
+    })["name"]
+    # Titik pesan ulang: kalau stok setelah reservasi < 2, pesan 4.
+    item = get("Item", "BRG-ZA-2115")
+    if not any(r.get("warehouse") == warehouse for r in item.get("reorder_levels", [])):
+        update("Item", "BRG-ZA-2115", {"reorder_levels": [{
+            "warehouse_group": "All Warehouses - %s" % abbr,
+            "warehouse": warehouse,
+            "warehouse_reorder_level": 2,
+            "warehouse_reorder_qty": 4,
+            "material_request_type": "Purchase",
+        }], "valuation_rate": 3500000})
+        print("   set  %-26s titik pesan ulang BRG-ZA-2115 @ %s" % ("Item Reorder", warehouse))
+    else:
+        print("   ada  %-26s titik pesan ulang BRG-ZA-2115" % "Item Reorder")
+    if not find("Stock Ledger Entry", [["warehouse", "=", warehouse], ["item_code", "=", "BRG-ZA-2115"], ["is_cancelled", "=", 0]]):
+        se = call("POST", resource("Stock Entry"), {
+            "stock_entry_type": "Material Receipt",
+            "company": COMPANY,
+            "to_warehouse": warehouse,
+            "items": [
+                {"item_code": "BRG-ZA-2115", "qty": 2, "basic_rate": 3500000, "t_warehouse": warehouse},
+                {"item_code": "SEAL-MEK-100", "qty": 3, "basic_rate": 850000, "t_warehouse": warehouse},
+            ],
+            "docstatus": 1,
+        })["data"]
+        print("   buat %-26s %s (2 bearing, 3 seal)" % ("Stock Entry", se["name"]))
+    else:
+        print("   ada  %-26s stok awal sudah masuk" % "Stock Entry")
+
     print("== Asset Class")
     # Geometri bearing Rexnord ZA-2115 pada rig IMS, poros 2000 RPM.
     # Menghasilkan BPFO 236.4 Hz dan BPFI 296.9 Hz, sama dengan yang diuji di

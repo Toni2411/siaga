@@ -9,6 +9,7 @@
  "field_order": [
   "asset",
   "component",
+  "work_order",
   "failed_on",
   "column_break_8bvx",
   "failure_mode",
@@ -89,12 +90,19 @@
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Catatan"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Work Order",
+   "options": "SIAGA Work Order"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 20:58:27.925999",
+ "modified": "2026-09-18 21:46:34.958437",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Failure Log",

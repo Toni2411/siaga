@@ -14,15 +14,14 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 3 dari 8 selesai.
+Minggu 4 dari 8 selesai.
 
 | Bagian | Status |
 | --- | --- |
 | Stack Docker: ERPNext v15, TimescaleDB, Mosquitto | Jalan, semua layanan terverifikasi |
-| Custom app `siaga` | 6 DocType, field tambahan di Asset, workspace, seed demo |
+| Custom app `siaga` | 9 DocType, work order dengan reservasi part dan Material Request otomatis, grafik tren di form Asset |
 | Virtual edge: replay dataset IMS, DSP, ekstraksi ciri, MQTT | Jalan di Docker, 46 tes |
 | Gateway: MQTT ke TimescaleDB | Jalan di Docker, ~400 pesan/detik |
-| Grafik tren di ERPNext | Minggu 4 |
 | AI service | Minggu 5 |
 
 ## Menjalankan tes

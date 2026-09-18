@@ -1,0 +1,151 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:RSV-{#####}",
+ "creation": "2026-09-18 21:46:34.138172",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "work_order",
+  "asset",
+  "item",
+  "column_break_qinv",
+  "warehouse",
+  "qty",
+  "status",
+  "waktu_section",
+  "reserved_on",
+  "column_break_9vww",
+  "released_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Work Order",
+   "options": "SIAGA Work Order",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "work_order.asset",
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Aset",
+   "options": "Asset",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qinv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Gudang",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Jumlah",
+   "reqd": 1
+  },
+  {
+   "default": "Aktif",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Aktif\nDilepas\nDipakai"
+  },
+  {
+   "fieldname": "waktu_section",
+   "fieldtype": "Section Break",
+   "label": "Waktu"
+  },
+  {
+   "fieldname": "reserved_on",
+   "fieldtype": "Datetime",
+   "label": "Direservasi"
+  },
+  {
+   "fieldname": "column_break_9vww",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "released_on",
+   "fieldtype": "Datetime",
+   "label": "Dilepas / Dipakai"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-18 21:46:34.138172",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Part Reservation",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

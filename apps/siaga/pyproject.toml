@@ -5,7 +5,9 @@ description = "Maintenance berbasis kondisi dan otomasi procurement untuk alat t
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "psycopg[binary]>=3.1",
+]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]
