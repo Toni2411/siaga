@@ -18,3 +18,4 @@ data/cache/
 .vscode/
 .idea/
 Thumbs.db
+.env.test

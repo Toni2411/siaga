@@ -6,6 +6,20 @@
 # Semua container ERPNext memakai image kustom yang sudah memuat app siaga,
 # lalu folder app di-bind-mount supaya perubahan kode langsung terbaca.
 
+# Variabel yang dibaca app siaga di dalam ERPNext (bootstrap, Telegram).
+x-siaga-env: &siaga-env
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+  ERPNEXT_API_KEY: ${ERPNEXT_API_KEY:-}
+  ERPNEXT_API_SECRET: ${ERPNEXT_API_SECRET:-}
+  SIAGA_COMPANY: ${SIAGA_COMPANY:-PT Tambang Demo}
+  SIAGA_COMPANY_ABBR: ${SIAGA_COMPANY_ABBR:-PTD}
+  SIAGA_ADMIN_EMAIL: ${SIAGA_ADMIN_EMAIL:-planner@siaga.local}
+  SIAGA_ADMIN_NAME: ${SIAGA_ADMIN_NAME:-Maintenance Planner}
+  # Telegram hanya saluran notifikasi; kosong berarti nonaktif.
+  SIAGA_TELEGRAM_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  SIAGA_TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  SIAGA_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+
 x-erpnext: &erpnext
   image: siaga/erpnext:${ERPNEXT_VERSION:-v15}
   build:
@@ -15,10 +29,7 @@ x-erpnext: &erpnext
       ERPNEXT_VERSION: ${ERPNEXT_VERSION:-v15}
   restart: unless-stopped
   environment:
-    # Telegram hanya saluran notifikasi; kosong berarti nonaktif.
-    SIAGA_TELEGRAM_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-    SIAGA_TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
-    SIAGA_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+    <<: *siaga-env
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - logs:/home/frappe/frappe-bench/logs
@@ -87,15 +98,28 @@ services:
           echo "site sudah ada, dilewati";
           exit 0;
         fi;
-        bench new-site --no-mariadb-socket --mariadb-user-host-login-scope=% --db-root-password=${DB_ROOT_PASSWORD:-admin} --admin-password=${ADMIN_PASSWORD:-admin} --install-app erpnext --set-default ${SITE_NAME:-siaga.localhost};
+        bench new-site --no-mariadb-socket --mariadb-user-host-login-scope=% --db-root-password=${DB_ROOT_PASSWORD:-admin} --admin-password=${ADMIN_PASSWORD:-admin} --install-app erpnext --install-app siaga --set-default ${SITE_NAME:-siaga.localhost};
     depends_on:
       configurator:
+        condition: service_completed_successfully
+
+  # Setup wizard, scheduler, user bot untuk AI service, dan data demo.
+  # Idempoten: pada site yang sudah hidup hanya menyamakan API key dengan .env.
+  bootstrap:
+    <<: *erpnext
+    restart: "no"
+    entrypoint: ["bash", "-c"]
+    command:
+      - >
+        bench --site ${SITE_NAME:-siaga.localhost} execute siaga.setup.bootstrap;
+    depends_on:
+      create-site:
         condition: service_completed_successfully
 
   backend:
     <<: *erpnext
     depends_on:
-      create-site:
+      bootstrap:
         condition: service_completed_successfully
 
   websocket:
@@ -214,6 +238,17 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
+
+  # Menyiapkan dataset IMS di dalam container: unduh 1 GB, bongkar arsip,
+  # resample, simpan cache ke ./data/cache. Sekali saja.
+  #   docker compose --profile replay run --rm prepare
+  prepare:
+    image: siaga/services
+    profiles: ["replay"]
+    command: ["python", "/app/scripts/prepare_dataset.py"]
+    restart: "no"
+    volumes:
+      - ./data:/app/data
 
   # Virtual edge memutar dataset lalu berhenti. Ada di profile "replay" supaya
   # tidak ikut jalan tiap docker compose up, karena tiap putaran menghasilkan
