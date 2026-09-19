@@ -1,5 +1,7 @@
 # SIAGA
 
+[![tests](https://github.com/Toni2411/siaga/actions/workflows/tests.yml/badge.svg)](https://github.com/Toni2411/siaga/actions/workflows/tests.yml)
+
 **Maintenance berbasis kondisi yang berujung pada dokumen procurement, di atas ERPNext.**
 
 Getaran alat masuk → skor kesehatan per unit turun → work order terbit sendiri dengan
