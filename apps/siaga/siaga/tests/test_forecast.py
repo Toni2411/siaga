@@ -60,6 +60,25 @@ class TestForecast(SiagaTestCase):
 		self.assertEqual(frappe.db.get_value("SIAGA Work Order", wos[0], "material_request"), mrs[0])
 		self.assertEqual(len(auto_material_requests(e.item, e.warehouse)), 1)
 
+	def test_submitted_request_is_not_recreated_every_cycle(self):
+		e = self.env
+		for m in (30, 20, 10):
+			score(e.asset, 70, minutes_ago=m, projection=(5, 4, 9))
+		mrs = auto_material_requests(e.item, e.warehouse)
+		self.assertEqual(len(mrs), 1)
+		frappe.get_doc("Material Request", mrs[0]).submit()  # planner menyetujui, barang belum datang
+		self.assertEqual(auto_material_requests(e.item, e.warehouse), [], "tidak ada draft lagi")
+
+		score(e.asset, 68, minutes_ago=5, projection=(4.5, 3.5, 8))
+		self.assertEqual(auto_material_requests(e.item, e.warehouse), [], "siklus berikutnya tidak membuat draft baru")
+		total = frappe.db.sql("""select count(distinct mr.name) from `tabMaterial Request` mr
+			join `tabMaterial Request Item` mri on mri.parent = mr.name
+			where mr.siaga_auto = 1 and mr.docstatus < 2 and mri.item_code = %s""", e.item)[0][0]
+		self.assertEqual(total, 1)
+		self.assertEqual(stock.incoming_auto_qty(e.item, e.warehouse), 4)
+		row = next(r for r in forecast.table(warehouse=e.warehouse) if r.item == e.item)
+		self.assertEqual(row.pending_mr_qty, 4, "yang sudah disubmit tetap dihitung sedang dalam perjalanan")
+
 	def test_no_order_when_stock_covers_projected_need(self):
 		e = self.env
 		from siaga.tests.fixtures import receipt

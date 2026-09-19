@@ -123,15 +123,8 @@ def historical_monthly(item, warehouse, days=HISTORY_DAYS):
 
 
 def pending_auto_qty(item, warehouse):
-	rows = frappe.db.sql(
-		"""
-		select coalesce(sum(mri.qty), 0) from `tabMaterial Request` mr
-		join `tabMaterial Request Item` mri on mri.parent = mr.name
-		where mr.docstatus = 0 and mr.siaga_auto = 1 and mri.item_code = %s and mri.warehouse = %s
-		""",
-		(item, warehouse),
-	)
-	return flt(rows[0][0]) if rows else 0.0
+	"""Jumlah di Material Request SIAGA yang belum diterima: draft maupun yang sudah disubmit."""
+	return stock.incoming_auto_qty(item, warehouse)
 
 
 # ---- tabel gabungan ----
@@ -221,7 +214,9 @@ def check_projection(asset, cls):
 		if not level:
 			continue
 		total = sum(x.qty for x in all_needs if x.item == r.item and x.warehouse == r.warehouse)
-		after = stock.available_qty(r.item, r.warehouse) - total
+		# Yang sudah diminta tapi belum datang dihitung sebagai akan ada; tanpa ini,
+		# begitu planner menyubmit draft, siklus berikutnya membuat draft lagi.
+		after = stock.available_qty(r.item, r.warehouse) + stock.incoming_auto_qty(r.item, r.warehouse) - total
 		if after >= flt(level.warehouse_reorder_level):
 			continue
 		qty = max(flt(level.warehouse_reorder_qty), flt(level.warehouse_reorder_level) - after)

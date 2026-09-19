@@ -92,6 +92,38 @@ class TestAgent(SiagaTestCase):
 		with self.assertRaises(frappe.ValidationError):
 			agent.ask("halo")
 
+	def test_partial_permissions_hide_sections_instead_of_failing(self):
+		e = self.env
+		user = "mekanik-agen@siaga.local"
+		if not frappe.db.exists("User", user):
+			frappe.get_doc({"doctype": "User", "email": user, "first_name": "Mekanik Agen", "send_welcome_email": 0,
+			                "roles": [{"role": "Maintenance User"}]}).insert(ignore_permissions=True)
+		frappe.clear_cache(user=user)
+		frappe.set_user(user)
+		ctx = agent.build_context()
+		self.assertIn(e.asset_name, ctx)  # unit boleh dibaca Maintenance User
+		self.assertIn("## Draft permintaan pembelian otomatis\n- tidak boleh dilihat user ini", ctx)
+		self.assertIn("## Stok dan forecast part\n- tidak boleh dilihat user ini", ctx)
+		frappe.set_user("Administrator")
+		frappe.clear_cache(user=user)
+
+	def test_model_failure_is_logged_not_raised(self):
+		import requests
+
+		class DownLLM:
+			model = "mati"
+
+			def chat(self, system, user):
+				raise requests.ConnectionError("refused")
+
+		agent.client = lambda: DownLLM()
+		result = agent.ask("halo?")
+		self.assertIsNone(result["answer"])
+		self.assertIn("tidak bisa dihubungi", result["error"])
+		log = frappe.get_doc("Agent Query", result["query"])
+		self.assertEqual(log.status, "Gagal")
+		self.assertIn("refused", log.error)
+
 	def test_context_obeys_reading_permissions_of_asking_user(self):
 		user = "tamu-uji@siaga.local"
 		if not frappe.db.exists("User", user):

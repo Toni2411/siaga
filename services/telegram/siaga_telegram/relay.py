@@ -69,7 +69,12 @@ class Relay:
             headers={"Authorization": "token %s:%s" % (self.s.api_key, self.s.api_secret)},
             timeout=60,
         )
+        if r.status_code >= 500:
+            # Backend belum siap (502 saat boot) atau galat sementara: perlakukan
+            # seperti tidak terjangkau supaya update-nya dicoba lagi, bukan hilang.
+            raise requests.HTTPError("ERPNext %s: %s" % (r.status_code, r.text[:200]), response=r)
         if r.status_code >= 400:
+            # Ditolak permanen (izin, permintaan rusak): catat, lewati.
             log.error("ERPNext %s untuk update %s: %s", r.status_code, update.get("update_id"), r.text[:300])
             return False
         return True

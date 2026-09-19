@@ -103,9 +103,9 @@ def queue(text, silent=False, chat_id=None, buttons=None, also_user=None):
 	`also_user`: kirim salinan ke chat pribadi user itu kalau tertaut dan
 	bukan chat utama, supaya mekanik yang ditugaskan tidak bergantung pada grup.
 	"""
-	if not enabled():
+	if not token_only():
 		return
-	targets = [chat_id or config()[1]]
+	targets = [t for t in (chat_id or config()[1],) if t]
 	personal = chat_for_user(also_user)
 	if personal and str(personal) not in [str(t) for t in targets]:
 		targets.append(personal)

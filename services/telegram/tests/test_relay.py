@@ -23,10 +23,11 @@ class FakeResponse:
 class FakeHttp:
     """Sesi HTTP palsu: getUpdates mengembalikan antrean yang disiapkan, ERPNext dicatat."""
 
-    def __init__(self, batches, erpnext_ok=True, erpnext_down=False):
+    def __init__(self, batches, erpnext_ok=True, erpnext_down=False, erpnext_status=None):
         self.batches = list(batches)
         self.erpnext_ok = erpnext_ok
         self.erpnext_down = erpnext_down
+        self.erpnext_status = erpnext_status
         self.forwarded = []
         self.offsets = []
 
@@ -38,7 +39,8 @@ class FakeHttp:
         if self.erpnext_down:
             raise requests.ConnectionError("refused")
         self.forwarded.append(json["update"]["update_id"])
-        return FakeResponse(200 if self.erpnext_ok else 500, {"message": {"ok": True}})
+        status = self.erpnext_status or (200 if self.erpnext_ok else 403)
+        return FakeResponse(status, {"message": {"ok": True}})
 
 
 def settings():
@@ -64,8 +66,8 @@ def test_step_forwards_each_update_once_and_advances_offset():
     assert http.offsets == [None, 12, 13]
 
 
-def test_erpnext_error_response_does_not_block_the_queue():
-    """Update yang ditolak ERPNext (4xx/5xx) dicatat lalu dilewati, bukan diulang selamanya."""
+def test_erpnext_rejection_does_not_block_the_queue():
+    """Update yang ditolak ERPNext (4xx) dicatat lalu dilewati, bukan diulang selamanya."""
     http = FakeHttp([[upd(1)], [upd(2)]], erpnext_ok=False)
     relay = Relay(settings(), session=http)
     relay.step()
@@ -82,3 +84,13 @@ def test_erpnext_unreachable_keeps_offset_at_failed_update():
         relay.step()
     assert relay.offset == 20
     assert http.forwarded == []
+
+
+def test_erpnext_5xx_is_retried_like_unreachable():
+    """502 saat backend masih boot bukan penolakan: offset berhenti di update itu."""
+    http = FakeHttp([[upd(30), upd(31)]], erpnext_status=502)
+    relay = Relay(settings(), session=http)
+    with pytest.raises(requests.RequestException):
+        relay.step()
+    assert relay.offset == 30
+    assert http.forwarded == [30]

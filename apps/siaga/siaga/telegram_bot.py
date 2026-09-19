@@ -54,6 +54,11 @@ HELP = (
 	"/bantuan — daftar ini"
 )
 
+GROUP_HINT = (
+	"Perintah dan tombol hanya berlaku di chat pribadi dengan bot ini, karena tiap chat "
+	"dipetakan ke satu user ERPNext. Grup hanya menerima notifikasi."
+)
+
 NOT_LINKED = (
 	"Chat ini belum ditautkan ke user ERPNext.\n"
 	"Minta planner membuat <b>Telegram Chat</b> untuk Anda di ERPNext, lalu kirim "
@@ -119,8 +124,9 @@ def split_command(text):
 # ---- sesi satu update ----
 
 class Session:
-	def __init__(self, chat_id, sender, text, callback_id=None):
+	def __init__(self, chat_id, sender, text, callback_id=None, chat_type="private"):
 		self.chat_id = str(chat_id)
+		self.chat_type = chat_type or "private"
 		self.sender = sender or {}
 		self.text = text or ""
 		self.callback_id = callback_id
@@ -133,10 +139,11 @@ class Session:
 	def from_update(cls, update):
 		cb = update.get("callback_query")
 		if cb:
-			return cls(cb["message"]["chat"]["id"], cb.get("from"), cb.get("data"), cb.get("id"))
+			chat = cb["message"]["chat"]
+			return cls(chat["id"], cb.get("from"), cb.get("data"), cb.get("id"), chat.get("type"))
 		msg = update.get("message") or update.get("edited_message")
 		if msg and msg.get("chat"):
-			return cls(msg["chat"]["id"], msg.get("from"), msg.get("text"))
+			return cls(msg["chat"]["id"], msg.get("from"), msg.get("text"), chat_type=msg["chat"].get("type"))
 		return None
 
 	@property
@@ -158,6 +165,11 @@ class Session:
 
 	def dispatch(self):
 		cmd, arg = split_command(self.text)
+		if self.chat_type != "private":
+			# Identitas dipetakan per chat, dan di grup satu chat dipakai banyak
+			# orang; tidak ada yang boleh bertindak atas nama user tertaut dari sana.
+			self.ack()
+			return self.reply(GROUP_HINT, silent=True)
 		if cmd in ("start", "mulai"):
 			return self.link(arg)
 

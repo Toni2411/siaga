@@ -180,6 +180,15 @@ class TestTelegramBot(SiagaTestCase):
 		self.assertIn("Tidak punya izin", self.last_text())
 		self.assertEqual(frappe.db.get_value("SIAGA Work Order", wo.name, "status"), "Terbuka")
 
+	def test_group_chat_cannot_act_as_linked_user(self):
+		self.link_chat()
+		wo = make_work_order(self.env)
+		update = press("wo:mulai:%s" % wo.name, update_id=45)
+		update["callback_query"]["message"]["chat"]["type"] = "supergroup"
+		self.handle(update)
+		self.assertIn("chat pribadi", self.last_text())
+		self.assertEqual(frappe.db.get_value("SIAGA Work Order", wo.name, "status"), "Terbuka")
+
 	def test_relay_endpoint_requires_bot_or_system_manager(self):
 		frappe.set_user(self.user)
 		with self.assertRaises(frappe.PermissionError):

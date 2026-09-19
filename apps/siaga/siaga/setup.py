@@ -141,6 +141,10 @@ def ensure_telegram_chat():
 	chat_id = env("SIAGA_TELEGRAM_CHAT_ID")
 	if not chat_id:
 		return
+	if str(chat_id).startswith("-"):
+		# Id negatif adalah grup: dipakai banyak orang, tidak boleh mewakili satu user.
+		step("chat Telegram utama adalah grup, hanya untuk notifikasi; tidak ditautkan ke user")
+		return
 	if frappe.db.exists("Telegram Chat", {"chat_id": chat_id}):
 		return
 	user = planner_user()

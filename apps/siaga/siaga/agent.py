@@ -58,17 +58,32 @@ def _fmt_when(value):
 	return pretty_date(get_datetime(value)) if value else "-"
 
 
+def _can_read(doctype):
+	return frappe.has_permission(doctype, "read")
+
+
 def build_context(max_rows=MAX_ROWS):
-	"""Teks ringkas keadaan sistem. Semua lewat get_list, jadi izin baca user berlaku."""
+	"""Teks ringkas keadaan sistem, hanya bagian yang boleh dibaca user ini.
+
+	Bagian yang tidak boleh dibaca ditulis eksplisit sebagai tidak boleh,
+	supaya model tidak menyimpulkan "tidak ada" dari yang sebenarnya "tidak
+	terlihat". Kalau tidak ada satu pun yang boleh, PermissionError."""
 	from siaga import forecast
 
 	parts = []
+	allowed = 0
+	hidden = "- tidak boleh dilihat user ini"
 
-	units = frappe.get_list(
-		"Asset Monitoring Profile",
-		fields=["asset", "monitoring_status", "alarm_state", "last_score", "last_score_at", "last_auto_work_order", "asset_class"],
-		order_by="last_score asc", limit_page_length=max_rows,
-	)
+	units = []
+	if not _can_read("Asset Monitoring Profile"):
+		parts.append("## Unit yang dipantau\n" + hidden)
+	else:
+		allowed += 1
+		units = frappe.get_list(
+			"Asset Monitoring Profile",
+			fields=["asset", "monitoring_status", "alarm_state", "last_score", "last_score_at", "last_auto_work_order", "asset_class"],
+			order_by="last_score asc", limit_page_length=max_rows,
+		)
 	lines = []
 	for u in units:
 		name = frappe.db.get_value("Asset", u.asset, "asset_name") or u.asset
@@ -86,65 +101,83 @@ def build_context(max_rows=MAX_ROWS):
 		if u.last_auto_work_order:
 			line += ", work order alarm terakhir %s" % u.last_auto_work_order
 		lines.append(line)
-	parts.append("## Unit yang dipantau (%d)\n%s" % (len(units), "\n".join(lines) or "- tidak ada"))
+	if _can_read("Asset Monitoring Profile"):
+		parts.append("## Unit yang dipantau (%d)\n%s" % (len(units), "\n".join(lines) or "- tidak ada"))
 
-	wos = frappe.get_list(
-		"SIAGA Work Order", filters={"docstatus": 1, "status": ["in", ("Terbuka", "Dikerjakan")]},
-		fields=["name", "title", "asset_name", "status", "priority", "trigger_source", "assigned_to", "creation", "component", "material_request"],
-		order_by="creation desc", limit_page_length=max_rows,
-	)
-	lines = ["- %s: %s | %s | %s | prioritas %s | %s | dibuat %s%s%s" % (
-		w.name, w.asset_name, w.title, w.status, w.priority, w.trigger_source, _fmt_when(w.creation),
-		" | ditugaskan ke %s" % w.assigned_to if w.assigned_to else "",
-		" | permintaan pembelian %s" % w.material_request if w.material_request else "") for w in wos]
-	parts.append("## Work order terbuka (%d)\n%s" % (len(wos), "\n".join(lines) or "- tidak ada"))
+	if not _can_read("SIAGA Work Order"):
+		parts.append("## Work order\n" + hidden)
+	else:
+		allowed += 1
+		wos = frappe.get_list(
+			"SIAGA Work Order", filters={"docstatus": 1, "status": ["in", ("Terbuka", "Dikerjakan")]},
+			fields=["name", "title", "asset_name", "status", "priority", "trigger_source", "assigned_to", "creation", "component", "material_request"],
+			order_by="creation desc", limit_page_length=max_rows,
+		)
+		lines = ["- %s: %s | %s | %s | prioritas %s | %s | dibuat %s%s%s" % (
+			w.name, w.asset_name, w.title, w.status, w.priority, w.trigger_source, _fmt_when(w.creation),
+			" | ditugaskan ke %s" % w.assigned_to if w.assigned_to else "",
+			" | permintaan pembelian %s" % w.material_request if w.material_request else "") for w in wos]
+		parts.append("## Work order terbuka (%d)\n%s" % (len(wos), "\n".join(lines) or "- tidak ada"))
 
-	done = frappe.get_list(
-		"SIAGA Work Order", filters={"docstatus": 1, "status": "Selesai"},
-		fields=["name", "asset_name", "completed_on", "failure_log", "completion_notes", "trigger_source"],
-		order_by="completed_on desc", limit_page_length=10,
-	)
-	lines = []
-	for w in done:
-		mode = frappe.db.get_value("Failure Log", w.failure_log, "failure_mode") if w.failure_log else None
-		lines.append("- %s: %s | selesai %s | kerusakan: %s | %s | catatan: %s" % (
-			w.name, w.asset_name, _fmt_when(w.completed_on), mode or "tidak dicatat", w.trigger_source, (w.completion_notes or "-")[:120]))
-	parts.append("## Work order selesai terakhir (%d)\n%s" % (len(done), "\n".join(lines) or "- tidak ada"))
+		done = frappe.get_list(
+			"SIAGA Work Order", filters={"docstatus": 1, "status": "Selesai"},
+			fields=["name", "asset_name", "completed_on", "failure_log", "completion_notes", "trigger_source"],
+			order_by="completed_on desc", limit_page_length=10,
+		)
+		lines = []
+		for w in done:
+			mode = frappe.db.get_value("Failure Log", w.failure_log, "failure_mode") if w.failure_log else None
+			lines.append("- %s: %s | selesai %s | kerusakan: %s | %s | catatan: %s" % (
+				w.name, w.asset_name, _fmt_when(w.completed_on), mode or "tidak dicatat", w.trigger_source, (w.completion_notes or "-")[:120]))
+		parts.append("## Work order selesai terakhir (%d)\n%s" % (len(done), "\n".join(lines) or "- tidak ada"))
 
-	try:
+	# Aturan yang sama dengan /stok: tabel forecast memakai get_all dan SQL,
+	# jadi izinnya diperiksa di sini, bukan diandalkan dari kuerinya.
+	if not _can_read("Stock Ledger Entry"):
+		parts.append("## Stok dan forecast part\n" + hidden)
+	else:
+		allowed += 1
 		rows = forecast.table()
 		lines = ["- %s (%s) di %s: fisik %g, terkunci WO %g, tersedia %g, proyeksi kondisi %g%s, titik pesan %g, draft MR menunggu %g, saran: %s, rata-rata pemakaian historis %.1f/bulan" % (
 			r.item, r.item_name, r.warehouse, r.actual_qty, r.locked_qty, r.available_qty, r.projected_qty,
 			" (%s)" % r.projected_units if r.projected_units else "", r.reorder_level, r.pending_mr_qty, r.advice, r.historical_monthly)
 			for r in rows]
 		parts.append("## Stok dan forecast part\n%s" % ("\n".join(lines) or "- tidak ada"))
-	except frappe.PermissionError:
-		parts.append("## Stok dan forecast part\n- tidak boleh dilihat user ini")
 
-	mrs = frappe.get_list(
-		"Material Request", filters={"siaga_auto": 1, "docstatus": 0},
-		fields=["name", "transaction_date", "siaga_reason", "siaga_work_order"], limit_page_length=max_rows,
-	)
-	lines = []
-	for m in mrs:
-		items = frappe.get_all("Material Request Item", filters={"parent": m.name}, fields=["item_code", "qty", "warehouse"])
-		lines.append("- %s (%s): %s | alasan: %s" % (
-			m.name, m.transaction_date, ", ".join("%s x%g ke %s" % (i.item_code, flt(i.qty), i.warehouse) for i in items),
-			m.siaga_reason or ("dari work order %s" % m.siaga_work_order)))
-	parts.append("## Draft permintaan pembelian otomatis menunggu approval (%d)\n%s" % (len(mrs), "\n".join(lines) or "- tidak ada"))
+	if not _can_read("Material Request"):
+		parts.append("## Draft permintaan pembelian otomatis\n" + hidden)
+	else:
+		allowed += 1
+		mrs = frappe.get_list(
+			"Material Request", filters={"siaga_auto": 1, "docstatus": 0},
+			fields=["name", "transaction_date", "siaga_reason", "siaga_work_order"], limit_page_length=max_rows,
+		)
+		lines = []
+		for m in mrs:
+			items = frappe.get_all("Material Request Item", filters={"parent": m.name}, fields=["item_code", "qty", "warehouse"])
+			lines.append("- %s (%s): %s | alasan: %s" % (
+				m.name, m.transaction_date, ", ".join("%s x%g ke %s" % (i.item_code, flt(i.qty), i.warehouse) for i in items),
+				m.siaga_reason or ("dari work order %s" % m.siaga_work_order)))
+		parts.append("## Draft permintaan pembelian otomatis menunggu approval (%d)\n%s" % (len(mrs), "\n".join(lines) or "- tidak ada"))
 
-	logs = frappe.get_list(
-		"Failure Log", fields=["name", "asset", "failed_on", "failure_mode", "training_label", "work_order", "root_cause"],
-		order_by="failed_on desc", limit_page_length=10,
-	)
-	lines = []
-	for lg in logs:
-		name = frappe.db.get_value("Asset", lg.asset, "asset_name") or lg.asset
-		lines.append("- %s: %s | %s | %s (label %s) | work order %s%s" % (
-			lg.name, name, _fmt_when(lg.failed_on), lg.failure_mode, lg.training_label, lg.work_order or "-",
-			" | akar masalah: %s" % lg.root_cause if lg.root_cause else ""))
-	parts.append("## Riwayat kerusakan terakhir (%d)\n%s" % (len(logs), "\n".join(lines) or "- tidak ada"))
+	if not _can_read("Failure Log"):
+		parts.append("## Riwayat kerusakan\n" + hidden)
+	else:
+		allowed += 1
+		logs = frappe.get_list(
+			"Failure Log", fields=["name", "asset", "failed_on", "failure_mode", "training_label", "work_order", "root_cause"],
+			order_by="failed_on desc", limit_page_length=10,
+		)
+		lines = []
+		for lg in logs:
+			name = frappe.db.get_value("Asset", lg.asset, "asset_name") or lg.asset
+			lines.append("- %s: %s | %s | %s (label %s) | work order %s%s" % (
+				lg.name, name, _fmt_when(lg.failed_on), lg.failure_mode, lg.training_label, lg.work_order or "-",
+				" | akar masalah: %s" % lg.root_cause if lg.root_cause else ""))
+		parts.append("## Riwayat kerusakan terakhir (%d)\n%s" % (len(logs), "\n".join(lines) or "- tidak ada"))
 
+	if not allowed:
+		frappe.throw(_("User ini tidak punya izin membaca data SIAGA"), frappe.PermissionError)
 	return "\n\n".join(parts)
 
 
@@ -190,17 +223,21 @@ def ask(question, channel="API", chat_id=None):
 		"doctype": "Agent Query", "user": frappe.session.user, "channel": channel, "chat_id": chat_id,
 		"question": question, "model": llm.model, "context_chars": len(context), "status": "Diproses",
 	})
+	error = None
 	try:
 		answer = llm.chat(SYSTEM, "DATA SAAT INI:\n\n%s\n\nPERTANYAAN: %s" % (context, question))
 		if not answer:
 			answer = _("Model tidak memberi jawaban.")
-		log.update({"answer": answer, "status": "Selesai", "latency_ms": int((time.time() - started) * 1000)})
+		log.update({"answer": answer, "status": "Selesai"})
 	except requests.RequestException as e:
-		log.update({"status": "Gagal", "error": str(e)[:500], "latency_ms": int((time.time() - started) * 1000)})
-		log.insert(ignore_permissions=True)
-		frappe.throw(_("Model tidak bisa dihubungi: {0}").format(str(e)[:200]))
+		# Tidak dilempar: kalau dilempar, request-nya digulung balik dan catatan
+		# Gagal ikut hilang. Pemanggil membaca field error.
+		answer, error = None, _("Model tidak bisa dihubungi: {0}").format(str(e)[:200])
+		log.update({"status": "Gagal", "error": str(e)[:500]})
+	log.latency_ms = int((time.time() - started) * 1000)
 	log.insert(ignore_permissions=True)
-	return {"answer": answer, "model": llm.model, "latency_ms": log.latency_ms, "context_chars": len(context), "query": log.name}
+	return {"answer": answer, "error": error, "model": llm.model, "latency_ms": log.latency_ms,
+	        "context_chars": len(context), "query": log.name}
 
 
 def to_telegram_html(text):
@@ -219,8 +256,11 @@ def answer_to_chat(chat_id, user, question):
 	frappe.set_user(user)
 	try:
 		result = ask(question, channel="Telegram", chat_id=chat_id)
-		text = "💬 %s\n\n<i>%s · %.0f s · baca-saja, dari data saat ini</i>" % (
-			to_telegram_html(result["answer"]), frappe.utils.escape_html(result["model"]), result["latency_ms"] / 1000.0)
+		if result.get("error"):
+			text = "⚠️ %s" % frappe.utils.escape_html(result["error"])
+		else:
+			text = "💬 %s\n\n<i>%s · %.0f s · baca-saja, dari data saat ini</i>" % (
+				to_telegram_html(result["answer"]), frappe.utils.escape_html(result["model"]), result["latency_ms"] / 1000.0)
 	except Exception as e:
 		text = "⚠️ %s" % frappe.utils.escape_html(frappe.utils.strip_html(str(e)) or _("Gagal menjawab"))
 	telegram.send(text, chat_id=chat_id)

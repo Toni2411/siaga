@@ -67,18 +67,40 @@ def release(work_order, new_status="Dilepas"):
 	return names
 
 
+# Status Material Request yang berarti barangnya sudah datang atau permintaannya
+# dihentikan; selain ini, permintaan masih "dalam perjalanan" dan tidak boleh
+# dibuat lagi hanya karena stok belum bertambah.
+CLOSED_MR_STATUS = ("Stopped", "Cancelled", "Received", "Issued", "Transferred")
+
+
 def open_auto_material_request(item, warehouse):
-	"""Draft Material Request buatan SIAGA yang masih terbuka untuk item dan gudang ini."""
+	"""Material Request buatan SIAGA yang masih terbuka untuk item dan gudang ini:
+	draft, atau sudah disubmit tapi barangnya belum diterima."""
 	return frappe.db.sql(
 		"""
 		select mr.name from `tabMaterial Request` mr
 		join `tabMaterial Request Item` mri on mri.parent = mr.name
-		where mr.docstatus = 0 and mr.siaga_auto = 1
-		  and mri.item_code = %s and mri.warehouse = %s
+		where mr.siaga_auto = 1 and mri.item_code = %s and mri.warehouse = %s
+		  and (mr.docstatus = 0 or (mr.docstatus = 1 and mr.status not in %s))
+		order by mr.docstatus, mr.creation desc
 		limit 1
 		""",
-		(item, warehouse),
+		(item, warehouse, CLOSED_MR_STATUS),
 	)
+
+
+def incoming_auto_qty(item, warehouse):
+	"""Jumlah di Material Request SIAGA yang masih terbuka (draft atau belum diterima)."""
+	rows = frappe.db.sql(
+		"""
+		select coalesce(sum(mri.qty), 0) from `tabMaterial Request` mr
+		join `tabMaterial Request Item` mri on mri.parent = mr.name
+		where mr.siaga_auto = 1 and mri.item_code = %s and mri.warehouse = %s
+		  and (mr.docstatus = 0 or (mr.docstatus = 1 and mr.status not in %s))
+		""",
+		(item, warehouse, CLOSED_MR_STATUS),
+	)
+	return flt(rows[0][0]) if rows else 0.0
 
 
 def ensure_material_request(item, warehouse, qty, company, work_order=None):
