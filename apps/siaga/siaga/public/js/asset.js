@@ -32,9 +32,10 @@ function siaga_render_trend(frm) {
 				<span style="flex:1"></span>
 				<div class="btn-group btn-group-sm" role="group"></div>
 			</div>`);
-		const $chart = $(`<div class="siaga-trend-chart"></div>`);
+		const $health = $(`<div class="siaga-health-chart"></div>`);
+		const $chart = $(`<div class="siaga-trend-chart" style="margin-top:12px"></div>`);
 		const $latest = $(`<div class="small text-muted" style="margin-top:6px"></div>`);
-		$wrap.append($toolbar, $chart, $latest);
+		$wrap.append($toolbar, $health, $chart, $latest);
 
 		const $group = $toolbar.find(".btn-group");
 		let current = frm.__siaga_hours || 24 * 7;
@@ -46,6 +47,34 @@ function siaga_render_trend(frm) {
 				siaga_render_trend(frm);
 			});
 			$group.append($b);
+		});
+
+		frappe.call({
+			method: "siaga.api.timeseries.get_health",
+			args: { asset: frm.doc.name, hours: current },
+		}).then((res) => {
+			const d = res.message;
+			if (!d.scores.length) {
+				$health.html(`<div class="text-muted small">${__("Belum ada skor kesehatan. Status: ")}${d.profile.monitoring_status || "-"}</div>`);
+				return;
+			}
+			const markers = [];
+			if (d.thresholds.threshold_trigger) markers.push({ label: __("pemicu"), value: d.thresholds.threshold_trigger, options: { labelPos: "left" } });
+			if (d.thresholds.threshold_recover) markers.push({ label: __("pulih"), value: d.thresholds.threshold_recover, options: { labelPos: "left" } });
+			const alarm = d.profile.alarm_state === "Alarm"
+				? ` · <span class="indicator-pill red">${__("Alarm")} ${d.profile.last_auto_work_order || ""}</span>`
+				: ` · <span class="indicator-pill green">${__("Normal")}</span>`;
+			$toolbar.find(".small").append(alarm);
+			new frappe.Chart($health[0], {
+				title: __("Skor kesehatan (0–100)"),
+				data: { labels: d.labels, datasets: [{ name: __("skor"), values: d.scores }], yMarkers: markers },
+				type: "line",
+				height: 200,
+				colors: ["#16a34a"],
+				lineOptions: { hideDots: 1, regionFill: 1 },
+				axisOptions: { xIsSeries: 1, xAxisMode: "tick" },
+				tooltipOptions: { formatTooltipY: (v) => (v == null ? "-" : v.toFixed(1)) },
+			});
 		});
 
 		frappe.call({

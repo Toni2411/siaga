@@ -13,6 +13,7 @@
   "monitoring_enabled",
   "sample_rate_hz",
   "feature_schema_version",
+  "default_warehouse",
   "operasi_dan_geometri_bearing_section",
   "rpm_nominal",
   "rolling_elements",
@@ -178,12 +179,19 @@
    "fieldtype": "Table",
    "label": "Part Kandidat",
    "options": "Asset Class Candidate Part"
+  },
+  {
+   "description": "Gudang sumber untuk work order otomatis kelas ini",
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Gudang Spare Part",
+   "options": "Warehouse"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 20:58:13.999739",
+ "modified": "2026-09-19 07:15:54.541436",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Asset Class",

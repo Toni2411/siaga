@@ -19,9 +19,11 @@ fixtures = [
 # JS tambahan untuk DocType bawaan: grafik tren kondisi di form Asset.
 doctype_js = {"Asset": "public/js/asset.js"}
 
-# Diisi di minggu 6, saat webhook penutupan work order mulai mengalir balik ke
-# AI service sebagai label pelatihan.
-doc_events = {}
+# Skor kesehatan yang baru masuk dievaluasi terhadap aturan pemicu; kalau
+# lolos, work order otomatis terbit dalam transaksi yang sama.
+doc_events = {
+    "Health Score": {"after_insert": "siaga.automation.on_health_score"},
+}
 
 # Diisi di minggu 5, untuk penyegaran titik pesan ulang dari hasil forecast.
 scheduler_events = {}

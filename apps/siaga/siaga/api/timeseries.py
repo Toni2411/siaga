@@ -121,3 +121,37 @@ def latest(asset):
 		)
 		feats = {f: float(v) for f, v in cur.fetchall()}
 	return {"source_id": source, "ts": state[0].isoformat(), "state": state[1], "features": feats}
+
+
+@frappe.whitelist()
+def get_health(asset, hours=168):
+	"""Riwayat skor kesehatan dari Health Score, plus ambang kelasnya."""
+	frappe.has_permission("Asset", "read", asset, throw=True)
+	hours = int(hours)
+	since = add_to_date(now_datetime(), hours=-hours)
+	rows = frappe.get_all(
+		"Health Score",
+		filters={"asset": asset, "scored_at": [">=", since]},
+		fields=["scored_at", "score", "work_order"],
+		order_by="scored_at asc",
+		limit=5000,
+	)
+	profile = frappe.db.get_value(
+		"Asset Monitoring Profile", {"asset": asset},
+		["monitoring_status", "alarm_state", "asset_class", "last_auto_work_order"], as_dict=True,
+	) or {}
+	thresholds = {}
+	if profile.get("asset_class"):
+		thresholds = frappe.db.get_value(
+			"Asset Class", profile["asset_class"], ["threshold_trigger", "threshold_recover"], as_dict=True,
+		) or {}
+	# Jarangkan supaya grafik tetap ringan: maksimal sekitar 300 titik.
+	step = max(1, len(rows) // 300)
+	rows = rows[::step]
+	return {
+		"labels": [r.scored_at.strftime("%d/%m %H:%M") for r in rows],
+		"scores": [r.score for r in rows],
+		"work_orders": [r.work_order for r in rows],
+		"thresholds": thresholds,
+		"profile": profile,
+	}

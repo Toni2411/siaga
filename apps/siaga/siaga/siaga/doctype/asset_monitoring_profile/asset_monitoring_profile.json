@@ -12,6 +12,9 @@
   "column_break_zqhe",
   "data_source_id",
   "monitoring_status",
+  "alarm_state",
+  "alarm_since",
+  "last_auto_work_order",
   "baseline_dan_model_section",
   "baseline_started_on",
   "baseline_completed_on",
@@ -122,12 +125,35 @@
    "fieldname": "notes",
    "fieldtype": "Small Text",
    "label": "Catatan"
+  },
+  {
+   "default": "Normal",
+   "description": "Alarm sejak work order otomatis terbit; kembali Normal setelah skor melewati ambang pulih",
+   "fieldname": "alarm_state",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status Alarm",
+   "options": "Normal\nAlarm",
+   "read_only": 1
+  },
+  {
+   "fieldname": "alarm_since",
+   "fieldtype": "Datetime",
+   "label": "Alarm Sejak",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_auto_work_order",
+   "fieldtype": "Link",
+   "label": "Work Order Otomatis Terakhir",
+   "options": "SIAGA Work Order",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 20:58:27.214331",
+ "modified": "2026-09-19 07:15:54.273345",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Asset Monitoring Profile",

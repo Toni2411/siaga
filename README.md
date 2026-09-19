@@ -14,12 +14,12 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 5 dari 8 selesai.
+Minggu 6 dari 8 selesai. Rantai tujuh langkah jalan penuh tanpa intervensi.
 
 | Bagian | Status |
 | --- | --- |
 | Stack Docker: ERPNext v15, TimescaleDB, Mosquitto | Jalan, semua layanan terverifikasi |
-| Custom app `siaga` | 9 DocType, work order dengan reservasi part dan Material Request otomatis, grafik tren di form Asset |
+| Custom app `siaga` | 9 DocType, work order otomatis dari skor kesehatan, reservasi part, Material Request otomatis, grafik skor dan tren di form Asset |
 | Virtual edge: replay dataset IMS, DSP, ekstraksi ciri, MQTT | Jalan di Docker, 46 tes |
 | Gateway: MQTT ke TimescaleDB | Jalan di Docker, ~400 pesan/detik |
 | AI service: model per unit, skor kesehatan, proyeksi, penjelasan pemicu | Jalan di Docker, 15 tes |
@@ -94,6 +94,16 @@ tiap Asset Monitoring Profile:
 3. `Dipantau` → nilai tiap cuplikan baru yang kondisinya stabil, tulis
    Health Score: skor 0–100, ciri yang paling menyimpang, gejala, dan
    proyeksi hari ke ambang bila trennya turun.
+
+Skor yang masuk dievaluasi hook `after_insert` di ERPNext
+(`siaga/automation.py`): kalau skor di bawah ambang pemicu kelas selama
+`consecutive_cycles` berturut turut dan profil belum dalam status Alarm,
+work order otomatis terbit dan langsung submit, dengan komponen dan part
+dugaan dari tabel part kandidat kelas menurut gejala. Reservasi part dan
+draft Material Request menyusul dari controller work order. Profil masuk
+status Alarm sampai skor naik melewati ambang pulih (histeresis), dan
+planner menerima notifikasi lonceng. `scripts/reset_demo.sh` mengembalikan
+semuanya ke titik awal supaya rantai bisa diputar ulang.
 
 Modelnya Isolation Forest digabung jarak z robust per ciri, keduanya
 dikalibrasi ke tepi baseline unit itu sendiri. Pada dataset IMS, skor

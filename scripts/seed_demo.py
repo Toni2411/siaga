@@ -140,6 +140,7 @@ def main():
     # services/edge/tests/test_features.py.
     asset_class = ensure("Asset Class", "Pompa dewatering listrik", {
         "class_name": "Pompa dewatering listrik",
+        "default_warehouse": warehouse,
         "description": "Pompa sentrifugal bermotor listrik. Kelas alat pertama SIAGA, "
                        "sumber data v1 dari dataset run to failure IMS.",
         "monitoring_enabled": 1,
@@ -160,8 +161,19 @@ def main():
             {"component_type": "Bearing NDE", "symptom": "bpfo", "item": "BRG-ZA-2115", "qty": 1},
             {"component_type": "Bearing NDE", "symptom": "bpfi", "item": "BRG-ZA-2115", "qty": 1},
             {"component_type": "Seal mekanik", "symptom": "seal", "item": "SEAL-MEK-100", "qty": 1},
+            # Kalau gejala tidak spesifik, dugaan terbesar pada pompa adalah
+            # bearing sisi kopling. Ini konfigurasi kelas, bukan tebakan kode.
+            {"component_type": "Bearing DE", "symptom": "broadband", "item": "BRG-ZA-2115", "qty": 1},
         ],
     })
+    if not asset_class.get("default_warehouse"):
+        update("Asset Class", asset_class["name"], {"default_warehouse": warehouse})
+        print("   set  %-26s gudang spare part -> %s" % ("Asset Class", warehouse))
+    if not any(r.get("symptom") == "broadband" for r in asset_class.get("candidate_parts", [])):
+        rows = [{k: r[k] for k in ("component_type", "symptom", "item", "qty")} for r in asset_class["candidate_parts"]]
+        rows.append({"component_type": "Bearing DE", "symptom": "broadband", "item": "BRG-ZA-2115", "qty": 1})
+        update("Asset Class", asset_class["name"], {"candidate_parts": rows})
+        print("   set  %-26s part kandidat broadband" % "Asset Class")
     print("      BPFO %.1f Hz | BPFI %.1f Hz | BSF %.1f Hz | FTF %.1f Hz" % (
         asset_class["bpfo_hz"], asset_class["bpfi_hz"], asset_class["bsf_hz"], asset_class["ftf_hz"]))
 
