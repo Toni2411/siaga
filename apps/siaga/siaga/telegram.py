@@ -114,8 +114,12 @@ def notify_work_order_completed(wo, failure_log=None):
 	queue("\n".join(lines), silent=True)
 
 
-def daily_summary():
-	"""Ringkasan pagi: dijadwalkan lewat scheduler_events daily."""
+def daily_summary(now=False):
+	"""Ringkasan pagi: dijadwalkan lewat scheduler_events daily.
+
+	now=True mengirim langsung tanpa antrean, untuk pemicu manual lewat
+	bench execute yang prosesnya selesai sebelum sempat commit.
+	"""
 	if not enabled():
 		return
 	alarms = frappe.get_all("Asset Monitoring Profile", filters={"alarm_state": "Alarm"}, fields=["asset", "last_auto_work_order"])
@@ -130,4 +134,5 @@ def daily_summary():
 	for a in alarms:
 		name = frappe.db.get_value("Asset", a.asset, "asset_name") or a.asset
 		lines.append("• %s → %s" % (html.escape(name), link("SIAGA Work Order", a.last_auto_work_order) if a.last_auto_work_order else "-"))
-	queue("\n".join(lines), silent=True)
+	text = "\n".join(lines)
+	return send(text, silent=True) if now else queue(text, silent=True)
