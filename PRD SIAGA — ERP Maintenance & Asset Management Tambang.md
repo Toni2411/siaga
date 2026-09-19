@@ -296,6 +296,17 @@ Risiko paling nyata adalah yang pertama. ERP punya daya tarik untuk terus ditamb
 
 Soal data kerusakan, jangan pura-pura punya data lapangan. Menyebut terang terangan bahwa data berasal dari dataset run to failure publik justru menunjukkan kejujuran metodologi, dan itu nilai plus di mata penilai teknis. Lagipula dataset itu memuat kegagalan bearing sungguhan yang berjalan sampai tuntas, yang secara metodologi lebih kuat daripada gangguan yang dipaksakan di rig uji delapan minggu.
 
+## Yang berubah selama pembangunan
+
+Dicatat supaya dokumen ini tetap jujur terhadap kodenya.
+
+- Metrik lead time turun dari 48 jam ke minimal 12, target 24. Pada dataset IMS pemicu jatuh 24,7 jam sebelum rig berhenti.
+- Isolation Forest sendirian terbukti buta terhadap satu ciri yang melonjak di tengah ciri lain yang normal. Model per unit digabung dengan jarak z robust per ciri.
+- Aturan pemicu work order tinggal di ERPNext sebagai hook, bukan di AI service, supaya berjalan dalam transaksi yang sama dengan skornya.
+- Notifikasi Telegram keluar ditambahkan di minggu 8 sebagai saluran, bukan sebagai lingkup baru. Telegram dua arah dan agen LLM tetap di backlog sesuai urutan risikonya.
+- Sinyal paling dini pada data IMS adalah energi pita 600 sampai 1200 Hz, bukan BPFO, dan merambat ke keempat bearing yang berbagi poros. Lokalisasi cacat pada 3,2 kHz diakui lemah dan gejala spesifik hanya disebut kalau jelas melampaui baseline.
+- Bootstrap satu perintah menggantikan lima langkah manual: setup wizard programatik, user bot, dan data demo dibuat container bootstrap.
+
 ## Backlog di luar scope v1
 
 Ditunda dengan sadar, bukan dilupakan. Menuliskannya di sini membuat ide baru punya tempat pulang selain sprint yang sedang berjalan.

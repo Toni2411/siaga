@@ -36,6 +36,16 @@ Frappe (menu Customize atau DocType langsung) dan Frappe menulis JSON-nya ke
 folder ini. Jangan edit JSON dengan tangan. Controller Python di folder
 `doctype/<nama>/<nama>.py` diedit langsung, lalu restart backend.
 
+## Modul Python di luar DocType
+
+- `automation.py` — hook after_insert Health Score: aturan pemicu, histeresis, work order otomatis
+- `stock.py` — reservasi part, titik pesan ulang, Material Request, pengeluaran stok
+- `telegram.py` — notifikasi keluar lewat antrean
+- `setup.py` — bootstrap satu perintah: setup wizard, bot, data demo
+- `demo.py` — reset rantai otomasi untuk demo
+- `api/timeseries.py` — baca TimescaleDB untuk grafik di form Asset
+
 ## Pemasangan
 
-Lihat README di akar repo.
+Terpasang otomatis oleh `docker compose up` di akar repo (create-site memasang app,
+bootstrap mengisi data).
