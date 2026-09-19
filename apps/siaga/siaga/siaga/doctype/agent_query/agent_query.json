@@ -1,0 +1,138 @@
+{
+ "actions": [],
+ "creation": "2026-09-19 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "channel",
+  "chat_id",
+  "column_break_a",
+  "status",
+  "model",
+  "latency_ms",
+  "context_chars",
+  "tanya_jawab_section",
+  "question",
+  "answer",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "channel",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Saluran",
+   "options": "API\nTelegram",
+   "read_only": 1
+  },
+  {
+   "fieldname": "chat_id",
+   "fieldtype": "Data",
+   "label": "Chat ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Diproses\nSelesai\nGagal",
+   "read_only": 1
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Model",
+   "read_only": 1
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Waktu (ms)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "context_chars",
+   "fieldtype": "Int",
+   "label": "Panjang Konteks (karakter)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tanya_jawab_section",
+   "fieldtype": "Section Break",
+   "label": "Tanya Jawab"
+  },
+  {
+   "fieldname": "question",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Pertanyaan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "answer",
+   "fieldtype": "Text",
+   "label": "Jawaban",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Galat",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "in_create": 1,
+ "links": [],
+ "modified": "2026-09-19 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Agent Query",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

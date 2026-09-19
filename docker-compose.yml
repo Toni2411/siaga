@@ -19,6 +19,9 @@ x-siaga-env: &siaga-env
   SIAGA_TELEGRAM_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
   SIAGA_TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
   SIAGA_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
+  # Agen tanya-jawab baca-saja lewat Ollama. Kosong berarti nonaktif.
+  OLLAMA_URL: ${OLLAMA_URL:-}
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
 
 x-erpnext: &erpnext
   image: siaga/erpnext:${ERPNEXT_VERSION:-v15}
@@ -30,6 +33,9 @@ x-erpnext: &erpnext
   restart: unless-stopped
   environment:
     <<: *siaga-env
+  # Supaya container bisa mencapai Ollama yang jalan di mesin host.
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - logs:/home/frappe/frappe-bench/logs

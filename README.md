@@ -80,6 +80,13 @@ ditautkan lewat **SIAGA → Telegram Chat** (planner membuat baris, mekanik meng
 `/mulai KODE`). Perintah: `/wo`, `/unit`, `/stok`. Tiap aksi berjalan sebagai user ERPNext
 yang tertaut, dengan izin user itu, tanpa LLM.
 
+**Agen tanya-jawab** (opsional, baca-saja): isi `OLLAMA_URL=http://host.docker.internal:11434`
+dan `OLLAMA_MODEL` di `.env` dengan Ollama yang jalan di mesin host. Teks bebas atau `/tanya …`
+di Telegram (dan `siaga.agent.ask` lewat API) dijawab dari ringkasan keadaan yang disusun
+*sebagai user yang bertanya* — izin baca user itu yang berlaku. Agen tidak punya jalur tulis:
+tidak ada alat, tidak ada SQL dari model, jawabannya tidak pernah dieksekusi. Tiap tanya-jawab
+tercatat di **Agent Query** dengan model dan waktunya.
+
 ## Arsitektur
 
 ```mermaid
@@ -141,6 +148,10 @@ Keputusan yang mengikat:
   dua hari: jeda 20 jam sampai 4 hari (malam, akhir pekan) terbukti tidak mengubah normal,
   dan ambang 6 jam justru menggeser baseline dari jeda ke jeda sampai jatuh di masa
   degradasi — model lalu belajar "rusak" sebagai normal dan tidak pernah memicu.
+- **Agen LLM hanya membaca, dan bisa salah membaca.** Ia menjawab dari ringkasan teks, bukan
+  dari kueri; pada uji pertama ia menyebut "1 unit" untuk draft MR berjumlah 4 karena baris
+  ringkasannya tidak memuat jumlah. Yang diperbaiki ringkasannya, bukan promptnya. Jawaban
+  agen tidak pernah menjadi dokumen.
 - **"Alarm palsu" bukan metrik yang tepat untuk degradasi lambat.** Bearing set 1 turun
   ke 70-an selama dua minggu sebelum runtuh; titik di bawah ambang di masa itu adalah
   deteksi, bukan kesalahan. Yang diukur: apakah unit sehat pernah memicu (tidak), dan
@@ -191,7 +202,7 @@ python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --c
 ## Susunan repo
 
 ```
-apps/siaga/          app Frappe: 10 DocType, otomasi, stok, forecast, bot Telegram, 2 laporan   (26 tes)
+apps/siaga/          app Frappe: 11 DocType, otomasi, stok, forecast, bot Telegram, agen, 2 laporan (34 tes)
 services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (46 tes)
 services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik                     (4 tes)
 services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
@@ -209,8 +220,9 @@ python -m venv .venv && .venv/Scripts/python.exe -m pip install -e services/edge
 for d in edge gateway ai telegram; do (cd services/$d && ../../.venv/Scripts/python.exe -m pytest -q); done
 ```
 
-Tes app Frappe, di dalam stack yang sedang jalan (26 tes: aturan pemicu dan histeresis,
-reservasi dan penutupan work order, forecast, bot Telegram sampai batas izinnya):
+Tes app Frappe, di dalam stack yang sedang jalan (34 tes: aturan pemicu dan histeresis,
+reservasi dan penutupan work order, forecast, bot Telegram sampai batas izinnya, agen dengan
+LLM palsu):
 
 ```bash
 bash scripts/test_app.sh          # bench run-tests --app siaga, semuanya digulung balik
@@ -220,7 +232,6 @@ bash scripts/test_app.sh          # bench run-tests --app siaga, semuanya digulu
 
 - **v1.5 — hardware.** ESP32 + ADXL345 + CT sensor. Firmware memakai DSP yang sama;
   lulus kalau vektor cirinya cocok dengan rujukan Python pada gelombang uji yang sama.
-- **Agen tanya-jawab baca-saja** di Telegram lewat LLM lokal, tanpa hak tulis apa pun.
 - **Pelatihan ulang dari Failure Log**, begitu jumlahnya berarti.
 - Kelas alat kedua, fuel management, multi-site — ada di backlog PRD.
 

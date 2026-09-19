@@ -162,7 +162,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Saluran",
-   "link_count": 1,
+   "link_count": 2,
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -173,6 +173,16 @@
    "label": "Telegram Chat",
    "link_count": 0,
    "link_to": "Telegram Chat",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Agent Query",
+   "link_count": 0,
+   "link_to": "Agent Query",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"

@@ -17,6 +17,7 @@ Perintah:
     /wo           work order terbuka, dengan tombol Mulai / Selesai
     /unit         kondisi unit yang dipantau
     /stok         stok part kritis di gudang
+    /tanya ...    tanya bebas ke agen baca-saja (LLM lokal), kalau aktif
     /batal        batalkan langkah yang sedang menunggu jawaban
     /bantuan      daftar ini
 
@@ -48,6 +49,7 @@ HELP = (
 	"/wo — work order terbuka, tombol Mulai / Selesai\n"
 	"/unit — kondisi unit yang dipantau\n"
 	"/stok — stok part kritis\n"
+	"/tanya … — tanya bebas, dijawab agen baca-saja dari data saat ini\n"
 	"/batal — batalkan langkah yang menunggu jawaban\n"
 	"/bantuan — daftar ini"
 )
@@ -177,6 +179,8 @@ class Session:
 			return self.list_units()
 		if cmd == "stok":
 			return self.list_stock()
+		if cmd == "tanya":
+			return self.ask_agent(arg)
 		if cmd == "batal":
 			self.set_pending(None)
 			return self.reply("Dibatalkan.")
@@ -186,6 +190,9 @@ class Session:
 			return self.reply(HELP)
 		if cmd is None and self.pending():
 			return self.continue_pending(self.text)
+		if cmd is None and self.text.strip():
+			# Teks bebas tanpa langkah yang menunggu: pertanyaan untuk agen.
+			return self.ask_agent(self.text)
 		return self.reply("Perintah tidak dikenal.\n\n" + HELP)
 
 	# ---- tautan chat ----
@@ -286,6 +293,23 @@ class Session:
 		if pending:
 			lines.append("🛒 %d draft permintaan pembelian menunggu approval." % pending)
 		return self.reply("\n".join(lines))
+
+	# ---- agen baca-saja ----
+
+	def ask_agent(self, question):
+		from siaga import agent
+
+		question = (question or "").strip()
+		if not question:
+			return self.reply("Tulis pertanyaannya setelah /tanya, misalnya: /tanya unit mana yang paling perlu perhatian?")
+		if not agent.enabled():
+			return self.reply("Agen tanya-jawab tidak aktif di server ini (OLLAMA_URL kosong).\n\n" + HELP)
+		if len(question) > agent.MAX_QUESTION:
+			return self.reply("Pertanyaan terlalu panjang (maksimal %d karakter)." % agent.MAX_QUESTION)
+		# Model lokal bisa butuh puluhan detik; jawab dari pekerjaan latar supaya relay tidak menunggu.
+		self.reply("🤔 Sebentar, saya baca data dulu…", silent=True)
+		frappe.enqueue("siaga.agent.answer_to_chat", queue="long", timeout=300, now=frappe.flags.in_test,
+		               chat_id=self.chat_id, user=frappe.session.user, question=question)
 
 	# ---- aksi tombol ----
 
