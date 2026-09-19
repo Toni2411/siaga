@@ -162,6 +162,24 @@ def notify_material_request(mr_name, item, qty, warehouse, wo_name=None):
 	queue("\n".join(lines))
 
 
+def notify_forecast_material_request(mr_name, item, qty, warehouse, needs):
+	"""Draft pembelian dari proyeksi kondisi, sebelum ada alarm."""
+	lines = [
+		"📈 <b>Draft pembelian dari proyeksi kondisi</b> %s" % link("Material Request", mr_name),
+		"%s ×%g ke %s" % (html.escape(item), flt(qty), html.escape(warehouse)),
+	]
+	for n in needs:
+		lines.append("• %s skor %.0f, ke ambang ~%s hari (%s–%s)" % (
+			html.escape(n.asset_name), flt(n.score), _fmt_days(n.days), _fmt_days(n.low), _fmt_days(n.high)))
+	lines.append("Belum ada alarm; stok tersedia tidak cukup untuk kebutuhan yang diproyeksikan.")
+	queue("\n".join(lines))
+
+
+def _fmt_days(d):
+	d = flt(d)
+	return "%.1f" % d if d < 10 else "%.0f" % d
+
+
 def notify_work_order_completed(wo, failure_log=None):
 	lines = [
 		"✅ <b>Work order selesai</b> %s" % link("SIAGA Work Order", wo.name),

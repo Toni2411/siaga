@@ -27,7 +27,10 @@ class FeatureFrame:
 
 
 def connect(dsn: str) -> psycopg.Connection:
-    return psycopg.connect(dsn)
+    # Autocommit: service ini hanya membaca. Tanpa ini psycopg membuka transaksi
+    # pada SELECT pertama dan membiarkannya "idle in transaction" di antara
+    # siklus, yang memblokir TRUNCATE saat reset demo.
+    return psycopg.connect(dsn, autocommit=True)
 
 
 def load_features(conn, source_id: str, since: datetime | None = None,

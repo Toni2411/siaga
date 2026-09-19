@@ -265,20 +265,18 @@ class Session:
 	def list_stock(self):
 		from siaga import stock
 
-		levels = frappe.get_all(
-			"Item Reorder", fields=["parent", "warehouse", "warehouse_reorder_level"],
-			order_by="parent asc",
-		)
-		if not levels:
-			return self.reply("Belum ada part dengan titik pesan ulang.")
 		if not frappe.has_permission("Stock Ledger Entry", "read"):
 			frappe.throw(_("Tidak punya izin melihat stok"), frappe.PermissionError)
+		from siaga import forecast
+
 		lines = ["<b>Stok part kritis</b> (tersedia setelah reservasi)"]
-		for lv in levels:
-			avail = stock.available_qty(lv.parent, lv.warehouse)
-			icon = "🔴" if avail < flt(lv.warehouse_reorder_level) else "🟢"
-			lines.append("%s %s — <b>%g</b> di %s (titik pesan %g)" % (
-				icon, html.escape(lv.parent), avail, html.escape(lv.warehouse), flt(lv.warehouse_reorder_level)))
+		for r in forecast.table():
+			icon = "🔴" if r.projected_after < 0 else ("🟠" if r.available_qty < r.reorder_level or r.projected_after < r.reorder_level else "🟢")
+			line = "%s %s — <b>%g</b> di %s (titik pesan %g)" % (
+				icon, html.escape(r.item), r.available_qty, html.escape(r.warehouse), r.reorder_level)
+			if r.projected_qty:
+				line += "\n   proyeksi kondisi: %g → %s" % (r.projected_qty, html.escape(r.projected_units))
+			lines.append(line)
 		pending = frappe.db.count("Material Request", {"siaga_auto": 1, "docstatus": 0})
 		if pending:
 			lines.append("🛒 %d draft permintaan pembelian menunggu approval." % pending)

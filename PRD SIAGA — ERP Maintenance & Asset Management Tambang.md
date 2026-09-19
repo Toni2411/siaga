@@ -189,7 +189,7 @@ Entitas baru dibuat sebagai DocType di custom app SIAGA. Entitas yang sudah ada 
 | Part Reservation | Baru | Id work order, item, gudang, jumlah, status pelepasan |
 | Asset Operating State | Baru | Id asset, waktu, status mati, start, stabil, atau berbeban |
 | Failure Log | Baru | Id work order, komponen yang rusak, akar masalah, label pelatihan |
-| Item Reorder | Bawaan ERPNext | Titik pesan ulang per gudang, diperbarui dari hasil forecast |
+| Item Reorder | Bawaan ERPNext | Titik pesan ulang per gudang; forecast membandingkan stok setelah kebutuhan terproyeksi dengan titik ini, tidak mengubahnya |
 | Material Request | Bawaan ERPNext | Tambah penanda dibuat otomatis oleh SIAGA |
 
 Relasi utamanya lurus. Satu asset punya banyak komponen, satu komponen punya banyak pembacaan sensor dan skor kesehatan. Satu skor kesehatan bisa memicu satu work order, dan satu work order menghasilkan satu failure log yang jadi bahan pelatihan berikutnya.
@@ -306,6 +306,7 @@ Dicatat supaya dokumen ini tetap jujur terhadap kodenya.
 - Notifikasi Telegram keluar ditambahkan di minggu 8 sebagai saluran, bukan sebagai lingkup baru. Telegram dua arah menyusul setelahnya dengan batas yang tegas: perintah terstruktur dan tombol inline, tiap chat dipetakan ke user ERPNext lewat kode tautan, tiap aksi dijalankan sebagai user itu dengan izin biasa. Logika dan izin ada di ERPNext; service relay hanya meneruskan update. Agen LLM tetap di backlog dan hanya untuk baca.
 - Sinyal paling dini pada data IMS adalah energi pita 600 sampai 1200 Hz, bukan BPFO, dan merambat ke keempat bearing yang berbagi poros. Lokalisasi cacat pada 3,2 kHz diakui lemah dan gejala spesifik hanya disebut kalau jelas melampaui baseline.
 - Baseline dimulai ulang otomatis setelah jeda data 48 jam atau lebih. Pada set 1 rig berhenti enam hari setelah run-in dan normalnya bergeser permanen; jeda lebih pendek terbukti tidak mengubah normal.
+- Forecast part (P1) tidak mengubah titik pesan ulang seperti tertulis semula. Ia menghitung kebutuhan terproyeksi dari unit yang belum alarm tapi trennya mantap menuju ambang (tiga siklus berturut turut, batas atas interval terhingga), menjumlahkannya per item per gudang, dan menerbitkan draft Material Request sebelum alarm kalau stok tersedia dikurangi kebutuhan itu jatuh di bawah titik pesan ulang. Titik pesan ulang tetap milik planner; yang berubah adalah kapan permintaan terbit dan alasan yang tertulis di dalamnya. Laporan Forecast Part menampilkan proyeksi kondisi berdampingan dengan rata-rata konsumsi historis.
 - Bootstrap satu perintah menggantikan lima langkah manual: setup wizard programatik, user bot, dan data demo dibuat container bootstrap.
 
 ## Backlog di luar scope v1

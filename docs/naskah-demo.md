@@ -17,7 +17,7 @@ browser berikut lebih dulu, urut:
 1. `localhost:8080/app/siaga` — workspace
 2. Asset → Pompa Dewatering Unit 01, gulir ke *Tren Kondisi*
 3. SIAGA Work Order → WO otomatis untuk Unit 01
-4. Material Request → draft Pending
+4. Material Request → draft Pending, dan laporan Forecast Part
 5. Laporan Lead Time Deteksi
 6. HP dengan Telegram terbuka, atau tangkapan layarnya
 
@@ -54,11 +54,14 @@ ceritakan apa yang terjadi.
 > dan part-nya sudah terisi dari konfigurasi kelas alat, dan bearing di gudang sudah
 > **dikunci** untuk pekerjaan ini. *(menu Lihat → Reservasi Part)*
 
-**2:45 — Pembelian (30 detik).** Menu Lihat → Material Request.
-> Stok tersedia jatuh dari dua ke satu, di bawah titik pesan ulang. Draft permintaan
-> pembelian terbit dalam siklus yang sama. Empat unit kena alarm, tapi hanya *satu*
-> draft — sistem tidak membuat empat permintaan untuk part yang sama. Ini satu-satunya
-> tempat manusia harus mengklik: procurement menyetujui.
+**2:45 — Pembelian (40 detik).** Menu Lihat → Material Request, lalu laporan Forecast Part.
+> Draft permintaan pembelian ini terbit *sebelum* alarm. Lihat alasannya: "proyeksi ke
+> ambang ~5 hari" — tren skor Unit 01 sudah mantap menuju ambang, stok
+> tersedia dikurangi kebutuhan yang diproyeksikan jatuh di bawah titik pesan ulang.
+> Empat unit kemudian kena alarm, tapi tetap *satu* draft — sistem tidak membuat empat
+> permintaan untuk part yang sama. Di laporan Forecast Part, kebutuhan dari kondisi
+> berdampingan dengan rata-rata konsumsi historis, yang tidak tahu apa-apa. Ini
+> satu-satunya tempat manusia harus mengklik: procurement menyetujui.
 
 **3:15 — Telegram (20 detik).** Tangkapan layar HP.
 > Planner tidak perlu membuka ERP untuk tahu. Alarm, draft pembelian, dan ringkasan pagi

@@ -38,6 +38,13 @@ SIAGA menyambung keduanya.
 | 6 | Tersedia < titik pesan ulang → draft Material Request, satu per item per gudang | modul stock |
 | 7 | Planner menyetujui. Notifikasi lonceng dan Telegram sudah sampai sebelumnya | ERPNext bawaan |
 
+Dan satu langkah yang berjalan *sebelum* langkah 3: begitu tren skor sebuah unit mantap
+menuju ambang — tiga siklus berturut-turut, seluruh interval proyeksi di dalam horizon kelas
+(14 hari) — kebutuhan part-nya dihitung, dan kalau stok tersedia dikurangi kebutuhan itu
+jatuh di bawah titik pesan ulang, draft Material Request terbit **sebelum ada alarm**, dengan
+alasannya tertulis. Laporan **Forecast Part** menampilkan kebutuhan terkunci, terproyeksi,
+dan rata-rata konsumsi historis berdampingan.
+
 Setelah perbaikan, mekanik menutup work order dan mencatat *apa yang sebenarnya rusak* —
 dari form ERPNext, atau dari HP lewat tombol di pesan Telegram. Catatan itu jadi label, dan
 laporan **Lead Time Deteksi** membandingkan tebakan sistem dengan kenyataan.
@@ -123,7 +130,10 @@ Keputusan yang mengikat:
 - **Arus dan suhu disintesis** dengan nilai nominal berderau karena dataset tidak
   memuatnya, ditandai `synthetic` di pesan, dan dikecualikan dari model.
 - **Proyeksi hari ke ambang adalah ekstrapolasi tren linear**, bukan model sisa umur.
-  Regresi RUL butuh data run-to-failure yang banyak; proyek ini tidak memilikinya.
+  Regresi RUL butuh data run-to-failure yang banyak; proyek ini tidak memilikinya. Dan
+  ia terlalu optimis pada degradasi yang mempercepat: proyeksi "5 hari" untuk Unit 01
+  berakhir 1,8 hari kemudian. Forecast part memakainya sebagai *tanda kebutuhan*, bukan
+  sebagai tanggal.
 - **Baseline yang melintasi shutdown lama tidak berlaku lagi.** Pada set 1, rig berhenti
   enam hari setelah masa run-in dan seluruh pita energi bergeser 5–10 MAD secara permanen;
   model yang dilatih sebelum jeda itu menilai unit sehat sebagai rusak selama sebulan.
@@ -161,8 +171,10 @@ Lintasan skor menjelang akhir (median 2 jam), jam sebelum rig berhenti:
 Unit sehat yang tidak berbagi poros dengan bearing rusak (set 1 unit 1) bertahan di 90
 selama sebulan dan sembilan kali restart, tanpa satu pun pemicu. Lead time yang tercatat di
 ERPNext dari penyelesaian work order oleh mekanik: 25,5 jam (set 2), tebakan gejala
-"Umum". Skor masuk → draft Material Request: satu siklus AI, 30 detik. `docker compose up`
-di proyek bersih sampai bootstrap selesai: ~2 menit setelah image tersedia.
+"Umum". Skor masuk → draft Material Request: satu siklus AI, 30 detik. Forecast part dari
+proyeksi mantap Unit 01: draft Material Request terbit **44 jam sebelum rig berhenti, 19 jam
+sebelum alarm**, saat skor masih 70. `docker compose up` di proyek bersih sampai bootstrap
+selesai: ~2 menit setelah image tersedia.
 
 Metrik lead time di PRD semula 48 jam; diturunkan ke *minimal 12, target 24* setelah set 2.
 Set 1 kemudian memberi 80 dan 128 — untuk mode kegagalan yang berkembang lebih lambat.
@@ -179,7 +191,7 @@ python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --c
 ## Susunan repo
 
 ```
-apps/siaga/          app Frappe: 10 DocType, otomasi, stok, bot Telegram, bootstrap, laporan
+apps/siaga/          app Frappe: 10 DocType, otomasi, stok, forecast, bot Telegram, bootstrap, 2 laporan
 services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (46 tes)
 services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik                     (4 tes)
 services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
@@ -201,8 +213,6 @@ for d in edge gateway ai telegram; do (cd services/$d && ../../.venv/Scripts/pyt
 
 - **v1.5 — hardware.** ESP32 + ADXL345 + CT sensor. Firmware memakai DSP yang sama;
   lulus kalau vektor cirinya cocok dengan rujukan Python pada gelombang uji yang sama.
-- **Forecast part dinamis.** Proyeksi tren ke ambang sudah ada per unit; berikutnya
-  dijumlahkan per item menjadi kebutuhan part beberapa minggu ke depan.
 - **Agen tanya-jawab baca-saja** di Telegram lewat LLM lokal, tanpa hak tulis apa pun.
 - **Pelatihan ulang dari Failure Log**, begitu jumlahnya berarti.
 - Kelas alat kedua, fuel management, multi-site — ada di backlog PRD.

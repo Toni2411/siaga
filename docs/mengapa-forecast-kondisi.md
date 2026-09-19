@@ -49,6 +49,24 @@ Pada saat pemicu, reservasi bearing di gudang membuat stok tersedia jatuh dari 2
 di bawah titik pesan ulang, dan draft Material Request terbit dalam siklus yang sama.
 Procurement melihat permintaan itu sehari sebelum kegagalan — bukan sehari sesudahnya.
 
+Dan sebenarnya lebih awal dari itu. Proyeksi tren bearing 1 menjadi *mantap* — tiga
+siklus berturut-turut, seluruh interval di dalam horizon 14 hari — sekitar 44
+jam sebelum rig berhenti, 19 jam sebelum alarm. Pada titik itu skor
+masih 70, belum ada work order, tapi kebutuhan satu bearing sudah dihitung:
+stok tersedia 2 dikurangi kebutuhan terproyeksi 1 jatuh di bawah titik pesan ulang, dan
+draft Material Request terbit dengan alasan tertulis: "proyeksi ke ambang ~5
+hari". Ketika alarm datang, reservasinya menemukan draft yang sudah ada.
+
+Angka "5 hari"-nya sendiri meleset: rig berhenti 1,8 hari kemudian, karena degradasi
+bearing mempercepat dan ekstrapolasi linear selalu terlambat mengejarnya. Itu bukan alasan
+menunggu proyeksi yang lebih akurat. Yang dibutuhkan procurement bukan tanggal yang tepat,
+melainkan kepastian bahwa unit ini akan membutuhkan bearing dalam waktu dekat — dan itu
+sudah cukup pasti dua hari sebelumnya.
+
+Forecast yang ini tidak pernah bisa dibuat dari konsumsi historis: rata-rata pemakaian
+bearing di gudang itu, dihitung sistem dari Material Issue 90 hari terakhir, sekitar satu
+per bulan. Laporan *Forecast Part* menaruh kedua angka berdampingan.
+
 ## Yang tidak dijanjikan
 
 Sehari terdengar sedikit dibanding lead time pengadaan bearing yang bisa berminggu-minggu.

@@ -24,7 +24,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, now_datetime
 
-from siaga import telegram
+from siaga import forecast, telegram
 
 OPEN_STATUSES = ("Terbuka", "Dikerjakan")
 
@@ -52,6 +52,11 @@ def on_health_score(doc, method=None):
 			frappe.db.set_value("Asset Monitoring Profile", profile.name,
 				{"alarm_state": "Normal", "alarm_since": None})
 		return
+
+	# Belum alarm, tapi tren menuju ambang: forecast part berjalan lebih dulu
+	# dari work order, supaya permintaan pembelian terbit sebelum kerusakan.
+	if doc.has_projection:
+		forecast.check_projection(doc.asset, cls)
 
 	if flt(doc.score) >= trigger:
 		return

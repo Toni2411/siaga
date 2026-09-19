@@ -31,6 +31,7 @@
   "consecutive_cycles",
   "column_break_rl1y",
   "baseline_days",
+  "forecast_horizon_days",
   "part_kandidat_per_gejala_section",
   "candidate_parts"
  ],
@@ -168,6 +169,13 @@
    "fieldname": "baseline_days",
    "fieldtype": "Int",
    "label": "Periode Baseline (hari)"
+  },
+  {
+   "default": "14",
+   "description": "Unit yang diproyeksikan menyentuh ambang dalam sekian hari dihitung sebagai kebutuhan part; draft Material Request terbit sebelum alarm kalau stok tidak cukup",
+   "fieldname": "forecast_horizon_days",
+   "fieldtype": "Int",
+   "label": "Horizon Forecast Part (hari)"
   },
   {
    "fieldname": "part_kandidat_per_gejala_section",

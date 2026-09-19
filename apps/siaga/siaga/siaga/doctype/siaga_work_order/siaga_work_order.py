@@ -93,6 +93,8 @@ class SIAGAWorkOrder(Document):
 			self.db_set("material_request", created[0][1])
 			for item, mr, is_new in created:
 				if is_new:
+					frappe.db.set_value("Material Request", mr, "siaga_reason",
+						_("Reservasi part untuk work order {0} ({1}) menjatuhkan stok tersedia di bawah titik pesan ulang").format(self.name, self.asset_name or self.asset))
 					frappe.msgprint(
 						_("Stok {0} jatuh di bawah titik pesan ulang. Draft Material Request {1} diterbitkan.").format(item, mr),
 						indicator="orange", alert=True,
