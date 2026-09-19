@@ -24,6 +24,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, now_datetime
 
+from siaga import telegram
+
 OPEN_STATUSES = ("Terbuka", "Dikerjakan")
 
 
@@ -153,6 +155,7 @@ def create_work_order(doc, cls):
 	wo.insert(ignore_permissions=True)
 	wo.submit()
 	notify_planners(wo, doc)
+	telegram.notify_auto_work_order(wo, doc)
 	return wo
 
 

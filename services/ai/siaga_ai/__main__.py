@@ -30,8 +30,33 @@ def main(argv=None) -> int:
     logging.basicConfig(level=args.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     erp = ERPNextClient(settings.erpnext_url, settings.erpnext_api_key, settings.erpnext_api_secret)
-    log.info("ERPNext %s sebagai %s, zona waktu %s", settings.erpnext_url, erp.whoami(), erp.tz)
-    conn = connect(settings.timescale_dsn)
+
+    # Di compose, ERPNext bisa siap beberapa menit setelah container ini.
+    # Tunggu dengan sabar alih alih mati dan mengandalkan restart.
+    for attempt in range(120):
+        try:
+            log.info("ERPNext %s sebagai %s, zona waktu %s", settings.erpnext_url, erp.whoami(), erp.tz)
+            break
+        except Exception as e:  # koneksi, 502 dari nginx, auth belum siap
+            if attempt % 6 == 0:
+                log.warning("ERPNext belum siap (%s), menunggu", str(e).splitlines()[0][:120])
+            time.sleep(5)
+    else:
+        log.error("ERPNext tidak pernah siap di %s", settings.erpnext_url)
+        return 1
+
+    conn = None
+    for attempt in range(60):
+        try:
+            conn = connect(settings.timescale_dsn)
+            break
+        except Exception as e:
+            if attempt % 6 == 0:
+                log.warning("TimescaleDB belum siap (%s), menunggu", str(e).splitlines()[0][:120])
+            time.sleep(5)
+    if conn is None:
+        log.error("TimescaleDB tidak pernah siap")
+        return 1
     pipeline = Pipeline(settings, erp, conn)
 
     stop = {"flag": False}
@@ -44,7 +69,12 @@ def main(argv=None) -> int:
 
     while True:
         started = time.monotonic()
-        for r in pipeline.run_once():
+        try:
+            results = pipeline.run_once()
+        except Exception as e:  # ERPNext atau database sedang tidak bisa dihubungi
+            log.warning("siklus dilewati: %s", str(e).splitlines()[0][:160])
+            results = []
+        for r in results:
             log.info("%s: %s -> %s | %s%s", r.asset, r.status_before, r.status_after, r.note,
                      " | model baru" if r.trained else "")
         if args.once or stop["flag"]:

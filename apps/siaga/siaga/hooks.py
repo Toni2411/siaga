@@ -25,5 +25,8 @@ doc_events = {
     "Health Score": {"after_insert": "siaga.automation.on_health_score"},
 }
 
-# Diisi di minggu 5, untuk penyegaran titik pesan ulang dari hasil forecast.
-scheduler_events = {}
+scheduler_events = {
+    # Ringkasan pagi ke Telegram: unit dalam alarm, work order terbuka,
+    # draft pembelian menunggu. Diam kalau Telegram tidak dikonfigurasi.
+    "daily": ["siaga.telegram.daily_summary"],
+}

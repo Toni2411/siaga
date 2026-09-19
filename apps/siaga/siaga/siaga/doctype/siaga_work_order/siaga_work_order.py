@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime, nowdate
 
-from siaga import stock
+from siaga import stock, telegram
 
 OPEN_STATUSES = ("Terbuka", "Dikerjakan")
 
@@ -97,6 +97,9 @@ class SIAGAWorkOrder(Document):
 						_("Stok {0} jatuh di bawah titik pesan ulang. Draft Material Request {1} diterbitkan.").format(item, mr),
 						indicator="orange", alert=True,
 					)
+					row = next((r for r in self.parts if r.item == item), None)
+					qty = frappe.db.get_value("Material Request Item", {"parent": mr, "item_code": item}, "qty")
+					telegram.notify_material_request(mr, item, qty or 0, row.warehouse if row else self.warehouse, self.name)
 
 	def on_cancel(self):
 		stock.release(self.name, "Dilepas")
@@ -148,6 +151,7 @@ class SIAGAWorkOrder(Document):
 		self.db_set(values)
 		if stock_entry:
 			frappe.msgprint(_("Part dikeluarkan dari gudang lewat {0}").format(stock_entry), alert=True)
+		telegram.notify_work_order_completed(self, log if failure_mode else None)
 		return self.status
 
 	def _require_status(self, *allowed):
