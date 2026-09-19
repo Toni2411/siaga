@@ -189,6 +189,27 @@ services:
       mosquitto:
         condition: service_started
 
+  # AI service: menilai tiap unit secara berkala dan menulis Health Score ke
+  # ERPNext lewat user siaga-bot. Model per unit disimpan di volume models.
+  ai:
+    image: siaga/services
+    command: ["python", "-m", "siaga_ai"]
+    restart: unless-stopped
+    environment:
+      SIAGA_TIMESCALE_DSN: postgresql://${TIMESCALE_USER:-siaga}:${TIMESCALE_PASSWORD:-siaga}@timescaledb:5432/${TIMESCALE_DB:-siaga_ts}
+      SIAGA_ERPNEXT_URL: http://frontend:8080
+      ERPNEXT_API_KEY: ${ERPNEXT_API_KEY}
+      ERPNEXT_API_SECRET: ${ERPNEXT_API_SECRET}
+      SIAGA_MODEL_DIR: /models
+      SIAGA_AI_INTERVAL: ${AI_INTERVAL:-30}
+    volumes:
+      - models:/models
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
   # Virtual edge memutar dataset lalu berhenti. Ada di profile "replay" supaya
   # tidak ikut jalan tiap docker compose up, karena tiap putaran menghasilkan
   # riwayat baru dengan cap waktu bergeser. Jalankan dengan:
@@ -211,6 +232,7 @@ services:
 volumes:
   sites:
   logs:
+  models:
   db-data:
   redis-cache-data:
   redis-queue-data:

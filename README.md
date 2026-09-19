@@ -14,7 +14,7 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 4 dari 8 selesai.
+Minggu 5 dari 8 selesai.
 
 | Bagian | Status |
 | --- | --- |
@@ -22,7 +22,7 @@ Minggu 4 dari 8 selesai.
 | Custom app `siaga` | 9 DocType, work order dengan reservasi part dan Material Request otomatis, grafik tren di form Asset |
 | Virtual edge: replay dataset IMS, DSP, ekstraksi ciri, MQTT | Jalan di Docker, 46 tes |
 | Gateway: MQTT ke TimescaleDB | Jalan di Docker, ~400 pesan/detik |
-| AI service | Minggu 5 |
+| AI service: model per unit, skor kesehatan, proyeksi, penjelasan pemicu | Jalan di Docker, 15 tes |
 
 ## Menjalankan tes
 
@@ -78,7 +78,32 @@ REPLAY_SPEED=0 docker compose --profile replay run --rm edge   # tanpa jeda, sek
 
 Tiap putaran memasang cap waktu virtual yang berakhir sekarang, jadi replay
 ulang menghasilkan riwayat kedua yang bergeser. Kosongkan dulu dengan
-`scripts/reset_timeseries.sh`.
+`scripts/reset_timeseries.sh`, dan `scripts/reset_monitoring.sh` untuk
+mengosongkan skor dan model supaya semuanya dinilai ulang.
+
+## AI service
+
+Berjalan terus di container `ai` dan memanggil ERPNext sebagai user
+`siaga-bot` dengan API key (dibuat lewat menu User, lalu isi
+`ERPNEXT_API_KEY` dan `ERPNEXT_API_SECRET` di `.env`). Tiap siklus, untuk
+tiap Asset Monitoring Profile:
+
+1. `Belum terdaftar` → begitu ada data, mulai mengumpulkan baseline.
+2. `Mengumpulkan baseline` → setelah `baseline_days` data sehat, latih model
+   per unit dan simpan di volume `models`.
+3. `Dipantau` → nilai tiap cuplikan baru yang kondisinya stabil, tulis
+   Health Score: skor 0–100, ciri yang paling menyimpang, gejala, dan
+   proyeksi hari ke ambang bila trennya turun.
+
+Modelnya Isolation Forest digabung jarak z robust per ciri, keduanya
+dikalibrasi ke tepi baseline unit itu sendiri. Pada dataset IMS, skor
+bearing 1 bertahan di atas 80 selama lima hari, turun ke 50 sekitar 36 jam
+sebelum akhir, dan memicu ambang 40 tiga siklus berturut turut sekitar 24
+jam sebelum rig dimatikan. Tiga bearing lain di poros yang sama ikut turun
+belakangan karena getaran merambat; di tambang sungguhan empat pompa tidak
+berbagi poros. Gejala spesifik bearing hanya disebut kalau ciri bearingnya
+jelas melampaui tepi baseline; selebihnya ditulis apa adanya sebagai
+kenaikan getaran lebar, karena pada 3.2 kHz lokalisasi cacat memang lemah.
 
 App `siaga` dibangun ke dalam image supaya worker dan scheduler juga
 memuatnya, lalu foldernya di-bind-mount sehingga perubahan kode Python
@@ -91,7 +116,7 @@ langsung terbaca. Kalau `hooks.py` atau DocType berubah, jalankan
 apps/siaga/          custom app Frappe, berjalan di dalam ERPNext
 services/edge/       virtual edge: replay dataset, DSP, ekstraksi ciri, penerbit MQTT
 services/gateway/    pelanggan MQTT yang menulis ke TimescaleDB
-services/ai/         deteksi anomali, skor kesehatan, pemicu work order (minggu 5)
+services/ai/         model per unit, skor kesehatan, proyeksi tren, penjelasan pemicu
 docker/              konfigurasi Mosquitto dan skema TimescaleDB
 scripts/             penyiapan dataset, seed demo, utilitas
 data/                dataset dan cache, tidak masuk git

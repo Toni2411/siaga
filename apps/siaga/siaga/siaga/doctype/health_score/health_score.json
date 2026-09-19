@@ -16,6 +16,7 @@
   "model_version",
   "anomaly_score",
   "proyeksi_section",
+  "has_projection",
   "days_to_threshold",
   "column_break_hpfx",
   "projection_low",
@@ -122,12 +123,20 @@
    "label": "Work Order Terpicu",
    "options": "SIAGA Work Order",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Kosong berarti tidak ada tren turun yang berarti, bukan nol hari",
+   "fieldname": "has_projection",
+   "fieldtype": "Check",
+   "label": "Ada Proyeksi",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 21:46:35.430712",
+ "modified": "2026-09-19 07:08:27.887073",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Health Score",

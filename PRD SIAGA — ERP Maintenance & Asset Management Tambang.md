@@ -231,7 +231,7 @@ Menunda hardware adalah keputusan penjadwalan, bukan pengurangan lingkup. Pengad
 
 Keputusan paling berdampak adalah tidak membangun ERP dari nol. Hambatan utama project ini adalah memahami proses bisnis maintenance dan procurement, bukan menulis CRUD. Membangun di atas ERPNext memindahkan waktu ke bagian yang membedakan.
 
-Model prediksi dimulai dari yang sederhana. Isolation Forest di atas vektor ciri, dilatih pada data baseline saat alat sehat, sudah cukup untuk v1. Satu model per unit, bukan satu model untuk seluruh kelas, dengan alasan yang dijelaskan di bagian menambah aset baru. Model yang lebih berat baru masuk kalau data riil sudah terkumpul dan baseline terbukti kurang.
+Model prediksi dimulai dari yang sederhana. Isolation Forest di atas vektor ciri, dilatih pada data baseline saat alat sehat, digabung dengan jarak z robust per ciri karena Isolation Forest hampir buta terhadap satu ciri yang melonjak sendirian di tengah dua puluh ciri normal, padahal cacat bearing dini persis seperti itu. Keduanya dikalibrasi ke tepi baseline yang sama dan diambil yang terbesar. Satu model per unit, bukan satu model untuk seluruh kelas, dengan alasan yang dijelaskan di bagian menambah aset baru. Model yang lebih berat baru masuk kalau data riil sudah terkumpul dan baseline terbukti kurang.
 
 Skor anomali hanya dihitung saat alat berjalan stabil. Mencampur kondisi mati, starting, dan berbeban membuat skor tidak bermakna, karena lonjakan arus saat start akan selalu terbaca sebagai anomali. Klasifikasi state sederhana dari RMS arus mendahului setiap inferensi, dan state itu ikut disimpan supaya skor bisa ditelusuri ke konteks operasinya.
 
@@ -267,7 +267,7 @@ Dua jenis metrik, dan yang kedua justru lebih menentukan karena tujuan project i
 Metrik teknis:
 
 - Rantai tujuh langkah selesai di bawah 60 detik dari anomali terdeteksi sampai draft PR terbit.
-- Deteksi anomali menandai degradasi minimal 48 jam waktu dataset sebelum kegagalan tercatat, pada mayoritas bearing yang diuji.
+- Deteksi anomali menandai degradasi minimal 12 jam waktu dataset sebelum kegagalan tercatat, dengan target 24 jam. Angka 48 jam yang semula ditulis tidak terbukti pada dataset IMS set 2: pada 3.2 kHz degradasi bearing 1 baru terbaca sekitar 36 jam sebelum akhir, dan pemicu tiga siklus berturut turut jatuh sekitar 24 jam sebelumnya.
 - Alarm palsu di bawah 2 per unit per minggu pada data normal, diukur di atas minimal dua minggu baseline.
 - Tidak ada work order kembar untuk satu kejadian kerusakan sepanjang pengujian.
 - Seluruh stack hidup dari satu perintah docker compose up di mesin bersih.

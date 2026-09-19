@@ -153,7 +153,7 @@ def main():
         "threshold_trigger": 40,
         "threshold_recover": 55,
         "consecutive_cycles": 3,
-        "baseline_days": 7,
+        "baseline_days": 1,
         "candidate_parts": [
             {"component_type": "Bearing DE", "symptom": "bpfo", "item": "BRG-ZA-2115", "qty": 1},
             {"component_type": "Bearing DE", "symptom": "bpfi", "item": "BRG-ZA-2115", "qty": 1},
@@ -165,32 +165,54 @@ def main():
     print("      BPFO %.1f Hz | BPFI %.1f Hz | BSF %.1f Hz | FTF %.1f Hz" % (
         asset_class["bpfo_hz"], asset_class["bpfi_hz"], asset_class["bsf_hz"], asset_class["ftf_hz"]))
 
-    print("== Aset")
-    assets = find("Asset", [["company", "=", COMPANY], ["docstatus", "=", 1]],
-                  fields=("name", "asset_name", "asset_class"))
-    if not assets:
-        print("   tidak ada aset submitted di %s, lewati penautan" % COMPANY)
-        return
-
-    for i, a in enumerate(assets, start=1):
-        if a.get("asset_class") != asset_class["name"]:
-            update("Asset", a["name"], {"asset_class": asset_class["name"], "operating_hours": 0})
-            print("   taut %-26s %s -> %s" % ("Asset", a["name"], asset_class["name"]))
+    print("== Aset: empat unit, satu per kanal dataset IMS")
+    # Kanal 0..3 dataset = PUMP-01..04. Bearing 1 (PUMP-01) yang gagal.
+    location = ensure("Location", "Site Tambang A", {"location_name": "Site Tambang A"})["name"]
+    assets = []
+    for unit in range(1, 5):
+        asset_name = "Pompa Dewatering Unit %02d" % unit
+        found = find("Asset", [["asset_name", "=", asset_name], ["docstatus", "=", 1]],
+                     fields=("name", "asset_name", "asset_class"))
+        if found:
+            a = found[0]
+            print("   ada  %-26s %s (%s)" % ("Asset", a["name"], asset_name))
         else:
-            print("   ada  %-26s %s sudah di kelas" % ("Asset", a["name"]))
+            a = call("POST", resource("Asset"), {
+                "asset_name": asset_name,
+                "item_code": "PUMP-DW-100",
+                "company": COMPANY,
+                "location": location,
+                "is_existing_asset": 1,
+                "gross_purchase_amount": 450000000,
+                "purchase_date": "2026-01-15",
+                "available_for_use_date": "2026-01-15",
+                "calculate_depreciation": 0,
+                "asset_class": asset_class["name"],
+                "docstatus": 1,
+            })["data"]
+            print("   buat %-26s %s (%s)" % ("Asset", a["name"], asset_name))
+        if a.get("asset_class") != asset_class["name"]:
+            update("Asset", a["name"], {"asset_class": asset_class["name"]})
+            print("   taut %-26s %s -> %s" % ("Asset", a["name"], asset_class["name"]))
+        assets.append((unit, a))
 
-        source_id = "PUMP-%02d" % i
-        ensure("Asset Monitoring Profile", a["name"], {
-            "asset": a["name"],
-            "data_source_id": source_id,
-            "monitoring_status": "Belum terdaftar",
-        })
+    for unit, a in assets:
+        source_id = "PUMP-%02d" % unit
+        profile = get("Asset Monitoring Profile", a["name"])
+        if profile and profile.get("data_source_id") != source_id:
+            update("Asset Monitoring Profile", a["name"], {"data_source_id": source_id})
+            print("   set  %-26s %s -> %s" % ("Asset Monitoring Profile", a["name"], source_id))
+        else:
+            ensure("Asset Monitoring Profile", a["name"], {
+                "asset": a["name"],
+                "data_source_id": source_id,
+                "monitoring_status": "Belum terdaftar",
+            })
 
         for ctype, cname in (("Bearing DE", "Bearing sisi kopling"),
                              ("Bearing NDE", "Bearing sisi bebas"),
                              ("Seal mekanik", "Seal poros")):
             if find("Asset Component", [["asset", "=", a["name"]], ["component_type", "=", ctype]]):
-                print("   ada  %-26s %s / %s" % ("Asset Component", a["name"], ctype))
                 continue
             item = "SEAL-MEK-100" if ctype == "Seal mekanik" else "BRG-ZA-2115"
             c = call("POST", resource("Asset Component"), {
@@ -201,7 +223,7 @@ def main():
                 "status": "Terpasang",
                 "design_life_hours": 20000 if ctype != "Seal mekanik" else 8000,
             })["data"]
-            print("   buat %-26s %s (%s)" % ("Asset Component", c["name"], ctype))
+            print("   buat %-26s %s (%s / %s)" % ("Asset Component", c["name"], a["asset_name"], ctype))
 
     print("selesai")
 

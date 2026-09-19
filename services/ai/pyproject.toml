@@ -1,0 +1,27 @@
+[project]
+name = "siaga-ai"
+version = "0.1.0"
+description = "AI service SIAGA: deteksi anomali per unit, skor kesehatan, proyeksi, penjelasan pemicu"
+requires-python = ">=3.10"
+dependencies = [
+    "siaga-edge",
+    "numpy>=1.24",
+    "scikit-learn>=1.4",
+    "joblib>=1.3",
+    "psycopg[binary]>=3.1",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["siaga_ai*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
