@@ -4,11 +4,26 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime
+from frappe.utils import cint, flt, now_datetime, nowdate
 
 from siaga import stock
 
 OPEN_STATUSES = ("Terbuka", "Dikerjakan")
+
+# Mode kegagalan yang dicatat mekanik -> label gejala yang dipakai model.
+# Ini yang membuat catatan mekanik bisa dibandingkan dengan tebakan sistem.
+TRAINING_LABEL = {
+	"Bearing outer race": "bpfo",
+	"Bearing inner race": "bpfi",
+	"Bearing elemen gelinding": "bsf",
+	"Unbalance": "unbalance",
+	"Misalignment": "misalignment",
+	"Kelonggaran dudukan": "kelonggaran",
+	"Seal bocor": "seal",
+	"Impeller aus": "impeller",
+	"Motor": "motor",
+	"Lainnya": "lainnya",
+}
 
 
 class SIAGAWorkOrder(Document):
@@ -94,13 +109,42 @@ class SIAGAWorkOrder(Document):
 		return self.status
 
 	@frappe.whitelist()
-	def complete_work(self, notes=None):
+	def complete_work(self, notes=None, failure_mode=None, root_cause=None, component_replaced=0, failed_on=None):
+		"""Selesaikan pekerjaan: keluarkan part, catat kerusakan, tandai komponen.
+
+		Catatan kerusakan (Failure Log) adalah label untuk pelatihan ulang:
+		apa yang sebenarnya rusak, dibandingkan dengan gejala yang ditebak
+		sistem saat memicu. Tanpa ini sistem tidak pernah tahu seberapa
+		sering tebakannya benar.
+		"""
 		self._require_status("Terbuka", "Dikerjakan")
 		stock_entry = stock.issue_stock(self, remarks=notes)
 		stock.release(self.name, "Dipakai")
+
 		values = {"status": "Selesai", "completed_on": now_datetime()}
 		if notes:
 			values["completion_notes"] = notes
+
+		if failure_mode:
+			log = frappe.get_doc({
+				"doctype": "Failure Log",
+				"asset": self.asset,
+				"component": self.component,
+				"work_order": self.name,
+				"failed_on": failed_on or now_datetime(),
+				"failure_mode": failure_mode,
+				"root_cause": root_cause,
+				"confirmed_by_mechanic": 1,
+				"training_label": TRAINING_LABEL.get(failure_mode, "lainnya"),
+				"notes": notes,
+			})
+			log.insert(ignore_permissions=True)
+			values["failure_log"] = log.name
+
+		if cint(component_replaced) and self.component:
+			frappe.db.set_value("Asset Component", self.component,
+				{"status": "Diganti", "replaced_on": nowdate()})
+
 		self.db_set(values)
 		if stock_entry:
 			frappe.msgprint(_("Part dikeluarkan dari gudang lewat {0}").format(stock_entry), alert=True)

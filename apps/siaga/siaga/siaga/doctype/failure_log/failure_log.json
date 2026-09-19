@@ -39,9 +39,9 @@
   },
   {
    "fieldname": "failed_on",
-   "fieldtype": "Date",
+   "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "Tanggal Rusak",
+   "label": "Waktu Rusak",
    "reqd": 1
   },
   {
@@ -102,7 +102,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-09-18 21:46:34.958437",
+ "modified": "2026-09-19 07:31:41.021862",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "Failure Log",

@@ -24,6 +24,7 @@
   "days_to_threshold",
   "column_break_owxi",
   "trigger_summary",
+  "trigger_html",
   "pekerjaan_section",
   "description",
   "spare_part_section",
@@ -37,7 +38,6 @@
   "failure_log",
   "completion_notes",
   "section_break_zosa",
-  "amended_from",
   "amended_from"
  ],
  "fields": [
@@ -248,15 +248,19 @@
    "no_copy": 1,
    "options": "SIAGA Work Order",
    "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
+   "read_only": 1
+  },
+  {
+   "fieldname": "trigger_html",
+   "fieldtype": "HTML",
+   "label": "Rincian Pemicu"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-18 21:46:33.625186",
+ "modified": "2026-09-19 07:29:17.506796",
  "modified_by": "Administrator",
  "module": "SIAGA",
  "name": "SIAGA Work Order",

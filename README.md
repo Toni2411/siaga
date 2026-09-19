@@ -14,7 +14,7 @@ v1.5 lewat antarmuka yang sama persis.
 
 ## Status
 
-Minggu 6 dari 8 selesai. Rantai tujuh langkah jalan penuh tanpa intervensi.
+Minggu 7 dari 8 selesai. Rantai tujuh langkah jalan penuh, dan lingkarannya tertutup lewat catatan kerusakan.
 
 | Bagian | Status |
 | --- | --- |
@@ -104,6 +104,15 @@ draft Material Request menyusul dari controller work order. Profil masuk
 status Alarm sampai skor naik melewati ambang pulih (histeresis), dan
 planner menerima notifikasi lonceng. `scripts/reset_demo.sh` mengembalikan
 semuanya ke titik awal supaya rantai bisa diputar ulang.
+
+Saat mekanik menyelesaikan work order, ia mencatat apa yang sebenarnya
+rusak; itu jadi Failure Log dengan label pelatihan, dan komponen ditandai
+diganti. Laporan **Lead Time Deteksi** membandingkan waktu pemicu sistem
+dengan waktu kerusakan yang dicatat, dan gejala tebakan dengan label
+sebenarnya. Pada dataset IMS: pemicu 24,7 jam sebelum rig berhenti, gejala
+tebakan "kenaikan getaran lebar" untuk kerusakan outer race, dinilai "Umum"
+karena tidak salah tapi tidak menunjuk. Setelah komponen diganti, tombol
+*Kumpulkan Baseline Ulang* di profil membuat model unit itu dilatih ulang.
 
 Modelnya Isolation Forest digabung jarak z robust per ciri, keduanya
 dikalibrasi ke tepi baseline unit itu sendiri. Pada dataset IMS, skor
