@@ -300,11 +300,12 @@ Soal data kerusakan, jangan pura-pura punya data lapangan. Menyebut terang teran
 
 Dicatat supaya dokumen ini tetap jujur terhadap kodenya.
 
-- Metrik lead time turun dari 48 jam ke minimal 12, target 24. Pada dataset IMS pemicu jatuh 24,7 jam sebelum rig berhenti.
+- Metrik lead time turun dari 48 jam ke minimal 12, target 24. Pada dataset IMS set 2 pemicu jatuh 25,5 jam sebelum rig berhenti; set 1, yang tidak dipakai menyetel apa pun, memberi 80 dan 128 jam untuk inner race dan elemen gelinding.
 - Isolation Forest sendirian terbukti buta terhadap satu ciri yang melonjak di tengah ciri lain yang normal. Model per unit digabung dengan jarak z robust per ciri.
 - Aturan pemicu work order tinggal di ERPNext sebagai hook, bukan di AI service, supaya berjalan dalam transaksi yang sama dengan skornya.
 - Notifikasi Telegram keluar ditambahkan di minggu 8 sebagai saluran, bukan sebagai lingkup baru. Telegram dua arah dan agen LLM tetap di backlog sesuai urutan risikonya.
 - Sinyal paling dini pada data IMS adalah energi pita 600 sampai 1200 Hz, bukan BPFO, dan merambat ke keempat bearing yang berbagi poros. Lokalisasi cacat pada 3,2 kHz diakui lemah dan gejala spesifik hanya disebut kalau jelas melampaui baseline.
+- Baseline dimulai ulang otomatis setelah jeda data 48 jam atau lebih. Pada set 1 rig berhenti enam hari setelah run-in dan normalnya bergeser permanen; jeda lebih pendek terbukti tidak mengubah normal.
 - Bootstrap satu perintah menggantikan lima langkah manual: setup wizard programatik, user bot, dan data demo dibuat container bootstrap.
 
 ## Backlog di luar scope v1

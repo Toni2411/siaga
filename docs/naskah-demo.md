@@ -40,9 +40,9 @@ ceritakan apa yang terjadi.
 > *(tunjuk lonjakan di ujung kanan)*
 
 **1:00 — Skor (45 detik).** Gulir ke grafik skor kesehatan.
-> Tiap unit punya modelnya sendiri, dilatih dari sehari pertama saat sehat. Skor 85
+> Tiap unit punya modelnya sendiri, dilatih dari tiga hari pertama saat sehat. Skor 85
 > selama lima hari, mulai turun 36 jam sebelum akhir, menembus ambang 40 tiga kali
-> berturut-turut 24 jam sebelum rig berhenti. Garis putus-putus ini ambang pemicu dan
+> berturut-turut 25 jam sebelum rig berhenti. Garis putus-putus ini ambang pemicu dan
 > ambang pulih — histeresis, supaya skor yang bergetar di sekitar ambang tidak membanjiri
 > planner. Dan pill merah ini: alarm, dengan work order yang diterbitkannya.
 
@@ -66,7 +66,7 @@ ceritakan apa yang terjadi.
 
 **3:35 — Menutup lingkaran (40 detik).** WO yang sudah Selesai → laporan Lead Time.
 > Saat mekanik menutup work order, ia mencatat apa yang sebenarnya rusak. Itu jadi
-> label. Laporan ini dihitung sistem dari catatannya sendiri: 24,7 jam lead time,
+> label. Laporan ini dihitung sistem dari catatannya sendiri: 25,5 jam lead time,
 > tebakan gejala "Umum". Angka yang bisa salah, dan sistem yang tahu kalau salah —
 > itu yang tidak dimiliki forecast berdasarkan rata-rata.
 

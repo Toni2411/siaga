@@ -27,6 +27,7 @@ from siaga_edge.config import IMS_PUMP_CLASS
 from siaga_edge.features import extract_features
 from siaga_edge.runner import operating_state
 
+from .baseline import baseline_mask
 from .config import MODEL_FEATURES
 from .model import UnitModel
 
@@ -54,7 +55,7 @@ def features_for_channel(waves, ch, cfg):
 
 def evaluate_channel(ts, X, running, baseline_days, trigger, recover, cycles, healthy_margin_h, label):
     ts = np.array(ts)
-    base = np.array([t <= ts[0] + timedelta(days=baseline_days) for t in ts]) & running
+    base, base_start, _ = baseline_mask(list(ts), running, ts[0], baseline_days)
     model = UnitModel.fit(X[base], MODEL_FEATURES)
     health, _ = model.health(X)
     health = np.where(running, health, np.nan)
@@ -71,6 +72,7 @@ def evaluate_channel(ts, X, running, baseline_days, trigger, recover, cycles, he
 
     row = {
         "baseline_n": int(base.sum()),
+        "baseline_start": base_start,
         "healthy_median": float(np.nanmedian(health[healthy])) if healthy.any() else float("nan"),
         "healthy_p05": float(np.nanpercentile(health[healthy], 5)) if healthy.any() else float("nan"),
         "false_alarms": int(np.nansum(health[healthy] < trigger)),

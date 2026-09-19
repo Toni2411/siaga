@@ -30,9 +30,18 @@ def reset_automation():
 		frappe.delete_doc("Material Request", name, ignore_permissions=True)
 		deleted += 1
 
+	# Catatan kerusakan dari work order otomatis putaran lama ikut dibuang:
+	# skor pemicunya sudah tidak ada setelah reset pemantauan.
+	auto_wos = frappe.get_all("SIAGA Work Order", filters={"trigger_source": "Otomatis"}, pluck="name")
+	logs = frappe.get_all("Failure Log", filters={"work_order": ["in", auto_wos]}, pluck="name") if auto_wos else []
+	for name in logs:
+		for wo in frappe.get_all("SIAGA Work Order", filters={"failure_log": name}, pluck="name"):
+			frappe.db.set_value("SIAGA Work Order", wo, "failure_log", None, update_modified=False)
+		frappe.delete_doc("Failure Log", name, ignore_permissions=True, force=True)
+
 	notifications = frappe.db.count("Notification Log", {"document_type": "SIAGA Work Order"})
 	frappe.db.delete("Notification Log", {"document_type": "SIAGA Work Order"})
 
 	frappe.db.sql("update `tabAsset Monitoring Profile` set alarm_state='Normal', alarm_since=NULL, last_auto_work_order=NULL")
 	frappe.db.commit()
-	print("work order otomatis dibatalkan: %d | draft MR dihapus: %d | notifikasi dihapus: %d" % (cancelled, deleted, notifications))
+	print("work order otomatis dibatalkan: %d | draft MR dihapus: %d | catatan kerusakan dihapus: %d | notifikasi dihapus: %d" % (cancelled, deleted, len(logs), notifications))

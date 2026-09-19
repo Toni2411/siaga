@@ -198,7 +198,7 @@ def seed_demo():
 		"default_warehouse": warehouse,
 		"rpm_nominal": 2000, "rolling_elements": 16, "ball_diameter_mm": 8.4074,
 		"pitch_diameter_mm": 71.501, "contact_angle_deg": 15.17,
-		"threshold_trigger": 40, "threshold_recover": 55, "consecutive_cycles": 3, "baseline_days": 1,
+		"threshold_trigger": 40, "threshold_recover": 55, "consecutive_cycles": 3, "baseline_days": 3,
 		"candidate_parts": [
 			{"component_type": "Bearing DE", "symptom": "bpfo", "item": "BRG-ZA-2115", "qty": 1},
 			{"component_type": "Bearing DE", "symptom": "bpfi", "item": "BRG-ZA-2115", "qty": 1},

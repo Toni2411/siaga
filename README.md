@@ -7,8 +7,9 @@
 Getaran alat masuk → skor kesehatan per unit turun → work order terbit sendiri dengan
 part dugaan → stok dikunci → draft permintaan pembelian menunggu approval. Satu-satunya
 titik manusia adalah approval itu. Pada dataset run-to-failure bearing sungguhan, sistem
-memicu **24,7 jam sebelum rig berhenti** — angka yang dihitung sistem dari catatannya
-sendiri, bukan klaim.
+memicu **25 jam sebelum rig berhenti**, dan pada dataset kedua yang tidak pernah dilihatnya,
+**80 dan 128 jam** untuk dua mode kegagalan lain — angka dari harness evaluasi yang bisa
+dijalankan ulang, bukan klaim.
 
 > *SIAGA is condition-based maintenance that ends in a purchase requisition, not a dashboard.
 > Vibration features flow into per-unit anomaly models; a sustained health-score breach
@@ -118,23 +119,57 @@ Keputusan yang mengikat:
   memuatnya, ditandai `synthetic` di pesan, dan dikecualikan dari model.
 - **Proyeksi hari ke ambang adalah ekstrapolasi tren linear**, bukan model sisa umur.
   Regresi RUL butuh data run-to-failure yang banyak; proyek ini tidak memilikinya.
+- **Baseline yang melintasi shutdown lama tidak berlaku lagi.** Pada set 1, rig berhenti
+  enam hari setelah masa run-in dan seluruh pita energi bergeser 5–10 MAD secara permanen;
+  model yang dilatih sebelum jeda itu menilai unit sehat sebagai rusak selama sebulan.
+  Baseline kini otomatis dimulai ulang setelah jeda data ≥ 48 jam. Ambangnya sengaja
+  dua hari: jeda 20 jam sampai 4 hari (malam, akhir pekan) terbukti tidak mengubah normal,
+  dan ambang 6 jam justru menggeser baseline dari jeda ke jeda sampai jatuh di masa
+  degradasi — model lalu belajar "rusak" sebagai normal dan tidak pernah memicu.
+- **"Alarm palsu" bukan metrik yang tepat untuk degradasi lambat.** Bearing set 1 turun
+  ke 70-an selama dua minggu sebelum runtuh; titik di bawah ambang di masa itu adalah
+  deteksi, bukan kesalahan. Yang diukur: apakah unit sehat pernah memicu (tidak), dan
+  berapa lama sebelum akhir unit rusak memicu.
 
 ## Hasil terukur
 
-Dari laporan sistem sendiri pada dataset IMS set 2, baseline 1 hari:
+Dua dataset IMS, konfigurasi kelas yang sama (baseline 3 hari, ambang 40/55, tiga siklus).
+Set 1 tidak pernah dipakai saat menyetel apa pun. Dihasilkan `python -m siaga_ai.evaluate`.
 
-| Ukuran | Nilai |
-| --- | --- |
-| Skor sehat, median / persentil 5 | 85 / 63 (ambang pulih 55) |
-| Alarm palsu di zona sehat, 4 unit × 5 hari | 0 |
-| Skor Unit 01 mulai turun | ~36 jam sebelum akhir |
-| Pemicu work order (3 siklus < 40) | **24,7 jam** sebelum rig berhenti |
-| Tebakan gejala vs kenyataan (outer race) | Umum, bukan spesifik |
-| Skor masuk → draft Material Request | < 1 siklus AI (30 s) |
-| `docker compose up` di proyek bersih sampai bootstrap selesai | ~2 menit setelah image tersedia |
+| Dataset | Unit | Kenyataan | Sehat med / p05 | Memicu | Lead time | Tebakan |
+| --- | --- | --- | --- | --- | --- | --- |
+| Set 2, 7 hari | 1 | outer race | 85 / 62 | ya | **25,5 jam** | umum |
+| Set 2 | 2–4 | sehat, poros sama | 83–85 / 58–66 | ya, 18–29 jam sebelum akhir | — | rambatan poros |
+| Set 1, 35 hari | 1 | sehat | 90 / 64 | **tidak** | — | — |
+| Set 1 | 3 | inner race | — | ya | **80,5 jam** | umum |
+| Set 1 | 4 | elemen gelinding | — | ya | **128 jam** | umum |
+| Set 1 | 2 | sehat, poros sama | 77 / 46 | ya, 68 jam sebelum akhir | — | rambatan poros |
 
-Metrik lead time di PRD semula 48 jam; diturunkan ke *minimal 12, target 24* setelah data
-bicara.
+Lintasan skor menjelang akhir (median 2 jam), jam sebelum rig berhenti:
+
+| | −168 | −120 | −72 | −48 | −36 | −24 | −12 | 0 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Set 2 U1 outer race | 81 | 87 | 87 | 86 | 55 | 39 | 3 | 0 |
+| Set 1 U3 inner race | 75 | 74 | 6 | 41 | 4 | 34 | 10 | 0 |
+| Set 1 U4 elemen gelinding | 75 | 25 | 31 | 33 | 31 | 25 | 18 | 7 |
+
+Unit sehat yang tidak berbagi poros dengan bearing rusak (set 1 unit 1) bertahan di 90
+selama sebulan dan sembilan kali restart, tanpa satu pun pemicu. Lead time yang tercatat di
+ERPNext dari penyelesaian work order oleh mekanik: 25,5 jam (set 2), tebakan gejala
+"Umum". Skor masuk → draft Material Request: satu siklus AI, 30 detik. `docker compose up`
+di proyek bersih sampai bootstrap selesai: ~2 menit setelah image tersedia.
+
+Metrik lead time di PRD semula 48 jam; diturunkan ke *minimal 12, target 24* setelah set 2.
+Set 1 kemudian memberi 80 dan 128 — untuk mode kegagalan yang berkembang lebih lambat.
+
+Mengulang angkanya sendiri, tanpa Docker:
+
+```bash
+python scripts/prepare_dataset.py --set 2 && python scripts/prepare_dataset.py --set 1
+cd services/ai
+python -m siaga_ai.evaluate --cache ../../data/cache/ims_2nd_test_3200hz.npz --failed 0:bpfo --baseline-days 3
+python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --channels 0,2,4,6 --failed 2:bpfi,3:bsf --baseline-days 3
+```
 
 ## Susunan repo
 

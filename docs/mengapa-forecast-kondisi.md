@@ -25,21 +25,25 @@ dan **apakah informasi itu sampai ke dokumen pembelian**.
 Dataset IMS set 2: empat bearing pada satu poros 2000 RPM, cuplikan satu detik tiap
 sepuluh menit selama tujuh hari, sampai bearing 1 gagal di outer race.
 
-Model per unit dilatih pada satu hari pertama (145 cuplikan sehat). Skor kesehatan
-bearing 1 setelah itu:
+Model per unit dilatih pada tiga hari pertama. Skor kesehatan bearing 1 setelah itu,
+median dua jam di sekitar tiap titik:
 
 | Jam sebelum rig berhenti | Skor |
 | --- | --- |
-| 120 | 85 |
+| 120 | 87 |
 | 48 | 86 |
-| 36 | 58 |
+| 36 | 55 |
 | 24 | 39 |
 | 12 | 3 |
 | 0 | 0 |
 
-Pemicu — tiga skor berturut-turut di bawah 40 — jatuh **24,7 jam** sebelum rig berhenti.
-Di zona sehat (sebelum 36 jam terakhir), keempat bearing tidak pernah sekali pun
-menyentuh 40. Nol alarm palsu selama lima hari.
+Pemicu — tiga skor berturut-turut di bawah 40 — jatuh **25,5 jam** sebelum rig berhenti.
+Di zona sehat, keempat bearing tidak pernah sekali pun menyentuh 40 selama lima hari.
+
+Dataset kedua, yang tidak pernah dipakai untuk menyetel apa pun, memberi angka yang lebih
+besar untuk mode kegagalan yang berkembang lebih lambat: bearing dengan cacat inner race
+memicu 80 jam sebelum akhir, bearing dengan cacat elemen gelinding 128 jam. Unit sehat di
+rig itu bertahan di skor 90 selama sebulan dan sembilan restart tanpa satu pun pemicu.
 
 Pada saat pemicu, reservasi bearing di gudang membuat stok tersedia jatuh dari 2 ke 1,
 di bawah titik pesan ulang, dan draft Material Request terbit dalam siklus yang sama.
@@ -50,7 +54,7 @@ Procurement melihat permintaan itu sehari sebelum kegagalan — bukan sehari ses
 Sehari terdengar sedikit dibanding lead time pengadaan bearing yang bisa berminggu-minggu.
 Tiga hal perlu diluruskan.
 
-Pertama, sehari adalah angka pada dataset ini, dengan laju cuplik 3,2 kHz yang dipilih
+Pertama, sehari sampai lima hari adalah angka pada dataset ini, dengan laju cuplik 3,2 kHz yang dipilih
 karena itu batas ESP32 dan akselerometer murah. Degradasi bearing 1 sudah terlihat pada
 pita 600–1200 Hz sekitar 36 jam sebelum akhir; ambang dan aturan tiga siklus sengaja
 konservatif supaya tidak ada alarm palsu. Sistem bisa disetel lebih agresif dengan harga

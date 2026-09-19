@@ -36,3 +36,32 @@ def test_healthy_unit_never_triggers():
     assert row["trigger_at"] is None
     assert row["false_alarms"] == 0
     assert row["healthy_median"] > 75
+
+
+def test_baseline_starts_after_long_gap():
+    from siaga_ai.baseline import baseline_start
+    t0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    # 6 jam data, berhenti 3 hari, lalu lanjut
+    ts = [t0 + timedelta(minutes=10 * k) for k in range(36)]
+    ts += [t0 + timedelta(days=3, minutes=10 * k) for k in range(300)]
+    running = np.ones(len(ts), dtype=bool)
+    assert baseline_start(ts, running, t0, days=1.0) == t0 + timedelta(days=3)
+
+
+def test_routine_stop_does_not_move_baseline():
+    from siaga_ai.baseline import baseline_start
+    t0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    # 6 jam data, berhenti semalam (12 jam), lanjut: masih baseline yang sama
+    ts = [t0 + timedelta(minutes=10 * k) for k in range(36)]
+    ts += [t0 + timedelta(hours=18, minutes=10 * k) for k in range(300)]
+    running = np.ones(len(ts), dtype=bool)
+    assert baseline_start(ts, running, t0, days=1.0) == t0
+
+
+def test_baseline_ignores_gap_after_window():
+    from siaga_ai.baseline import baseline_start
+    t0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    ts = [t0 + timedelta(minutes=10 * k) for k in range(200)]          # 33 jam penuh
+    ts += [t0 + timedelta(days=5, minutes=10 * k) for k in range(50)]  # jeda jauh setelah jendela
+    running = np.ones(len(ts), dtype=bool)
+    assert baseline_start(ts, running, t0, days=1.0) == t0
