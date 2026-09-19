@@ -242,15 +242,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "SIAGA Work Order",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "trigger_html",
    "fieldtype": "HTML",
    "label": "Rincian Pemicu"

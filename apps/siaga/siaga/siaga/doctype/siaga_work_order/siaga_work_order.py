@@ -101,6 +101,13 @@ class SIAGAWorkOrder(Document):
 					qty = frappe.db.get_value("Material Request Item", {"parent": mr, "item_code": item}, "qty")
 					telegram.notify_material_request(mr, item, qty or 0, row.warehouse if row else self.warehouse, self.name)
 
+	def on_update_after_submit(self):
+		# Penugasan berubah: mekanik yang ditugaskan dapat pesan Telegram dengan
+		# tombol Mulai / Selesai, kalau chat-nya sudah ditautkan.
+		before = self.get_doc_before_save()
+		if self.assigned_to and (not before or before.assigned_to != self.assigned_to):
+			telegram.notify_assigned(self)
+
 	def on_cancel(self):
 		stock.release(self.name, "Dilepas")
 		self.db_set("status", "Dibatalkan")

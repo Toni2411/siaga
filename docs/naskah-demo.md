@@ -62,7 +62,9 @@ ceritakan apa yang terjadi.
 
 **3:15 — Telegram (20 detik).** Tangkapan layar HP.
 > Planner tidak perlu membuka ERP untuk tahu. Alarm, draft pembelian, dan ringkasan pagi
-> masuk ke Telegram dengan tautan ke dokumennya.
+> masuk ke Telegram dengan tautan ke dokumennya. Dan mekanik tidak perlu membuka ERP untuk
+> bekerja: tombol *Mulai kerja* dan *Selesai* di pesan alarm, tiga pertanyaan, work order
+> tertutup dengan catatan kerusakan — sebagai user ERPNext yang tertaut ke chat itu.
 
 **3:35 — Menutup lingkaran (40 detik).** WO yang sudah Selesai → laporan Lead Time.
 > Saat mekanik menutup work order, ia mencatat apa yang sebenarnya rusak. Itu jadi

@@ -8,6 +8,11 @@ dikirim adalah ringkasan dokumen yang sudah tercatat. Pengiriman dilakukan
 lewat antrean setelah commit, jadi hook yang memanggilnya tidak pernah
 menunggu jaringan dan gagalnya Telegram tidak menggagalkan dokumennya.
 
+Pesan alarm membawa tombol inline; yang menekannya ditangani
+siaga.telegram_bot lewat relay service. Selain chat utama (SIAGA_TELEGRAM_CHAT_ID),
+pesan work order juga dikirim ke chat pribadi user yang ditugaskan kalau
+chat itu sudah ditautkan (Telegram Chat).
+
 Konfigurasi dari environment container (SIAGA_TELEGRAM_TOKEN,
 SIAGA_TELEGRAM_CHAT_ID) atau site config (siaga_telegram_token,
 siaga_telegram_chat_id). Kosong berarti nonaktif, tanpa galat.
@@ -21,7 +26,7 @@ import requests
 from frappe import _
 from frappe.utils import flt, get_url_to_form, nowdate
 
-API = "https://api.telegram.org/bot{token}/sendMessage"
+API = "https://api.telegram.org/bot{token}/{method}"
 
 
 def config():
@@ -35,6 +40,17 @@ def enabled():
 	return bool(token and chat_id)
 
 
+def token_only():
+	return config()[0]
+
+
+def chat_for_user(user):
+	"""Chat id pribadi user kalau sudah ditautkan, selain itu None."""
+	if not user:
+		return None
+	return frappe.db.get_value("Telegram Chat", {"user": user, "status": "Tertaut"}, "chat_id")
+
+
 def link(doctype, name, label=None):
 	base = os.environ.get("SIAGA_PUBLIC_URL") or frappe.conf.get("siaga_public_url")
 	url = get_url_to_form(doctype, name)
@@ -44,33 +60,64 @@ def link(doctype, name, label=None):
 	return '<a href="%s">%s</a>' % (url, html.escape(label or name))
 
 
-def send(text, silent=False):
-	"""Kirim sekarang (dipanggil worker). Aman dipanggil kalau nonaktif."""
-	token, chat_id = config()
+def call(method, payload):
+	"""Satu panggilan Bot API. Gagal dicatat di Error Log, tidak dilempar."""
+	token = token_only()
+	if not token:
+		return None
+	try:
+		r = requests.post(API.format(token=token, method=method), json=payload, timeout=15)
+		if r.status_code >= 400:
+			frappe.log_error(title="SIAGA Telegram %s %s" % (method, r.status_code), message=r.text[:1000])
+			return None
+		return r.json().get("result")
+	except (requests.RequestException, ValueError) as e:
+		frappe.log_error(title="SIAGA Telegram %s" % method, message=str(e))
+		return None
+
+
+def send(text, silent=False, chat_id=None, buttons=None):
+	"""Kirim sekarang (dipanggil worker). Aman dipanggil kalau nonaktif.
+
+	`buttons` adalah daftar baris, tiap baris daftar (label, callback_data);
+	dipakai untuk aksi dari HP yang ditangani siaga.telegram_bot.
+	"""
+	token, default_chat = config()
+	chat_id = chat_id or default_chat
 	if not token or not chat_id:
 		return False
-	try:
-		r = requests.post(
-			API.format(token=token),
-			json={"chat_id": chat_id, "text": text, "parse_mode": "HTML",
-			      "disable_web_page_preview": True, "disable_notification": bool(silent)},
-			timeout=15,
-		)
-		if r.status_code >= 400:
-			frappe.log_error("Telegram %s: %s" % (r.status_code, r.text[:300]), "SIAGA Telegram")
-			return False
-		return True
-	except requests.RequestException as e:
-		frappe.log_error(str(e), "SIAGA Telegram")
-		return False
+	payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML",
+	           "disable_web_page_preview": True, "disable_notification": bool(silent)}
+	if buttons:
+		payload["reply_markup"] = {"inline_keyboard": [
+			[{"text": label, "callback_data": data} for label, data in row] for row in buttons]}
+	return call("sendMessage", payload) is not None
 
 
-def queue(text, silent=False):
-	"""Antrekan pengiriman setelah transaksi saat ini commit."""
+def queue(text, silent=False, chat_id=None, buttons=None, also_user=None):
+	"""Antrekan pengiriman setelah transaksi saat ini commit.
+
+	`also_user`: kirim salinan ke chat pribadi user itu kalau tertaut dan
+	bukan chat utama, supaya mekanik yang ditugaskan tidak bergantung pada grup.
+	"""
 	if not enabled():
 		return
-	frappe.enqueue("siaga.telegram.send", text=text, silent=silent,
-	               queue="short", enqueue_after_commit=True)
+	targets = [chat_id or config()[1]]
+	personal = chat_for_user(also_user)
+	if personal and str(personal) not in [str(t) for t in targets]:
+		targets.append(personal)
+	for target in targets:
+		frappe.enqueue("siaga.telegram.send", text=text, silent=silent, chat_id=target, buttons=buttons,
+		               queue="short", enqueue_after_commit=True)
+
+
+def work_order_buttons(wo):
+	"""Tombol aksi untuk work order yang masih terbuka."""
+	if wo.status == "Terbuka":
+		return [[("▶️ Mulai kerja", "wo:mulai:%s" % wo.name), ("✅ Selesai", "wo:selesai:%s" % wo.name)]]
+	if wo.status == "Dikerjakan":
+		return [[("✅ Selesai", "wo:selesai:%s" % wo.name)]]
+	return None
 
 
 # ---- pesan per kejadian ----
@@ -87,7 +134,21 @@ def notify_auto_work_order(wo, score):
 		lines.append("Komponen dugaan: %s" % html.escape(wo.component))
 	if wo.parts:
 		lines.append("Part dikunci: " + ", ".join("%s ×%g" % (html.escape(p.item), flt(p.qty)) for p in wo.parts))
-	queue("\n".join(lines))
+	queue("\n".join(lines), buttons=work_order_buttons(wo), also_user=wo.assigned_to)
+
+
+def notify_assigned(wo):
+	"""Work order ditugaskan ke seseorang: kirim ke chat pribadinya kalau tertaut."""
+	chat_id = chat_for_user(wo.assigned_to)
+	if not chat_id:
+		return
+	lines = [
+		"🔧 <b>Ditugaskan ke Anda</b> %s" % link("SIAGA Work Order", wo.name),
+		html.escape(wo.title or ""),
+		html.escape(wo.asset_name or wo.asset),
+		"Prioritas <b>%s</b>%s" % (wo.priority, " · tenggat %s" % wo.due_date if wo.due_date else ""),
+	]
+	queue("\n".join(lines), chat_id=chat_id, buttons=work_order_buttons(wo))
 
 
 def notify_material_request(mr_name, item, qty, warehouse, wo_name=None):
@@ -111,7 +172,7 @@ def notify_work_order_completed(wo, failure_log=None):
 			html.escape(failure_log.failure_mode or "-"), link("Failure Log", failure_log.name)))
 	if wo.completion_notes:
 		lines.append(html.escape(wo.completion_notes))
-	queue("\n".join(lines), silent=True)
+	queue("\n".join(lines), silent=True, also_user=wo.assigned_to)
 
 
 def daily_summary(now=False):

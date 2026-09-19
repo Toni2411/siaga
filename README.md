@@ -38,9 +38,9 @@ SIAGA menyambung keduanya.
 | 6 | Tersedia < titik pesan ulang → draft Material Request, satu per item per gudang | modul stock |
 | 7 | Planner menyetujui. Notifikasi lonceng dan Telegram sudah sampai sebelumnya | ERPNext bawaan |
 
-Setelah perbaikan, mekanik menutup work order dan mencatat *apa yang sebenarnya rusak*.
-Catatan itu jadi label, dan laporan **Lead Time Deteksi** membandingkan tebakan sistem
-dengan kenyataan.
+Setelah perbaikan, mekanik menutup work order dan mencatat *apa yang sebenarnya rusak* —
+dari form ERPNext, atau dari HP lewat tombol di pesan Telegram. Catatan itu jadi label, dan
+laporan **Lead Time Deteksi** membandingkan tebakan sistem dengan kenyataan.
 
 ## Menjalankan
 
@@ -67,7 +67,11 @@ dan work order otomatis bermunculan di **SIAGA → Work Order**. Untuk mengulang
 
 **Telegram** (opsional): isi `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID` di `.env`
 (`scripts/telegram_chat_id.py` membantu), lalu `docker compose up -d`. Alarm, draft
-pembelian, penyelesaian work order, dan ringkasan pagi masuk ke HP.
+pembelian, penyelesaian work order, dan ringkasan pagi masuk ke HP, dan pesan alarm membawa
+tombol **Mulai kerja / Selesai**. Chat utama otomatis ditautkan ke planner; user lain
+ditautkan lewat **SIAGA → Telegram Chat** (planner membuat baris, mekanik mengirim
+`/mulai KODE`). Perintah: `/wo`, `/unit`, `/stok`. Tiap aksi berjalan sebagai user ERPNext
+yang tertaut, dengan izin user itu, tanpa LLM.
 
 ## Arsitektur
 
@@ -81,6 +85,7 @@ flowchart LR
   D -->|REST, user bot| E[ERPNext + app siaga]
   E --> F[Work order → reservasi → Material Request]
   E --> T[Telegram]
+  T -->|tombol, perintah| R[Relay] -->|REST, user bot| E
 ```
 
 Keputusan yang mengikat:
@@ -174,10 +179,11 @@ python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --c
 ## Susunan repo
 
 ```
-apps/siaga/          app Frappe: 9 DocType, otomasi, stok, Telegram, bootstrap, laporan
+apps/siaga/          app Frappe: 10 DocType, otomasi, stok, bot Telegram, bootstrap, laporan
 services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (46 tes)
 services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik                     (4 tes)
-services/ai/         model per unit, skor, proyeksi, penjelasan pemicu             (15 tes)
+services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
+services/telegram/   relay long polling Telegram → ERPNext, tanpa logika            (4 tes)
 docker/              Dockerfile ERPNext + app, skema TimescaleDB, Mosquitto
 scripts/             init_env, prepare_dataset, reset_demo, telegram_chat_id
 docs/                tulisan teknis dan naskah demo
@@ -187,16 +193,17 @@ PRD SIAGA.md         dokumen produk, termasuk keputusan yang berubah dan alasann
 Tes tanpa Docker:
 
 ```bash
-python -m venv .venv && .venv/Scripts/python.exe -m pip install -e services/edge -e services/gateway -e services/ai pytest
-for d in edge gateway ai; do (cd services/$d && ../../.venv/Scripts/python.exe -m pytest -q); done
+python -m venv .venv && .venv/Scripts/python.exe -m pip install -e services/edge -e services/gateway -e services/ai -e services/telegram pytest
+for d in edge gateway ai telegram; do (cd services/$d && ../../.venv/Scripts/python.exe -m pytest -q); done
 ```
 
 ## Berikutnya
 
 - **v1.5 — hardware.** ESP32 + ADXL345 + CT sensor. Firmware memakai DSP yang sama;
   lulus kalau vektor cirinya cocok dengan rujukan Python pada gelombang uji yang sama.
-- **Telegram dua arah.** Mekanik menutup work order dari HP lewat tombol terstruktur,
-  setiap chat dipetakan ke user ERPNext. LLM hanya untuk tanya-jawab baca.
+- **Forecast part dinamis.** Proyeksi tren ke ambang sudah ada per unit; berikutnya
+  dijumlahkan per item menjadi kebutuhan part beberapa minggu ke depan.
+- **Agen tanya-jawab baca-saja** di Telegram lewat LLM lokal, tanpa hak tulis apa pun.
 - **Pelatihan ulang dari Failure Log**, begitu jumlahnya berarti.
 - Kelas alat kedua, fuel management, multi-site — ada di backlog PRD.
 

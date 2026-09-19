@@ -43,5 +43,6 @@ def reset_automation():
 	frappe.db.delete("Notification Log", {"document_type": "SIAGA Work Order"})
 
 	frappe.db.sql("update `tabAsset Monitoring Profile` set alarm_state='Normal', alarm_since=NULL, last_auto_work_order=NULL")
+	frappe.db.sql("update `tabTelegram Chat` set pending=NULL")
 	frappe.db.commit()
 	print("work order otomatis dibatalkan: %d | draft MR dihapus: %d | catatan kerusakan dihapus: %d | notifikasi dihapus: %d" % (cancelled, deleted, len(logs), notifications))

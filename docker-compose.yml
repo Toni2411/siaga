@@ -15,7 +15,7 @@ x-siaga-env: &siaga-env
   SIAGA_COMPANY_ABBR: ${SIAGA_COMPANY_ABBR:-PTD}
   SIAGA_ADMIN_EMAIL: ${SIAGA_ADMIN_EMAIL:-planner@siaga.local}
   SIAGA_ADMIN_NAME: ${SIAGA_ADMIN_NAME:-Maintenance Planner}
-  # Telegram hanya saluran notifikasi; kosong berarti nonaktif.
+  # Telegram: notifikasi keluar dan perintah masuk (lewat service telegram). Kosong berarti nonaktif.
   SIAGA_TELEGRAM_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
   SIAGA_TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
   SIAGA_PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8080}
@@ -236,6 +236,22 @@ services:
     depends_on:
       timescaledb:
         condition: service_healthy
+      frontend:
+        condition: service_started
+
+  # Relay Telegram: long polling Bot API, tiap update diteruskan ke ERPNext
+  # (siaga.telegram_bot) sebagai user siaga-bot. Logika dan izin ada di ERPNext.
+  # Keluar dengan kode 0 kalau token kosong, jadi tidak ada yang jalan sia-sia.
+  telegram:
+    image: siaga/services
+    command: ["python", "-m", "siaga_telegram"]
+    restart: on-failure
+    environment:
+      SIAGA_TELEGRAM_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      SIAGA_ERPNEXT_URL: http://frontend:8080
+      ERPNEXT_API_KEY: ${ERPNEXT_API_KEY}
+      ERPNEXT_API_SECRET: ${ERPNEXT_API_SECRET}
+    depends_on:
       frontend:
         condition: service_started
 

@@ -14,7 +14,7 @@ Konfigurasi dibaca dari environment container (lihat .env.example).
 import os
 
 import frappe
-from frappe.utils import add_days, nowdate
+from frappe.utils import add_days, now_datetime, nowdate
 from frappe.utils.password import update_password
 
 
@@ -30,6 +30,7 @@ def bootstrap():
 	ensure_setup_wizard()
 	ensure_scheduler()
 	ensure_bot_user()
+	ensure_telegram_chat()
 	seed_demo()
 	frappe.db.commit()
 	step("bootstrap selesai")
@@ -114,7 +115,47 @@ def ensure_bot_user():
 	step("user bot %s siap dengan API key dari .env" % BOT_EMAIL)
 
 
-# ---- 4. data demo ----
+# ---- 4. chat Telegram utama ----
+
+def planner_user():
+	"""User yang mewakili planner: email dari .env kalau ada, kalau tidak
+	System Manager pertama yang bukan Administrator, kalau tidak Administrator."""
+	email = env("SIAGA_ADMIN_EMAIL")
+	if email and frappe.db.exists("User", email):
+		return email
+	managers = frappe.get_all(
+		"Has Role", filters={"role": "System Manager", "parenttype": "User"},
+		pluck="parent", order_by="creation asc",
+	)
+	for user in managers:
+		if user in ("Administrator", "Guest") or user == BOT_EMAIL:
+			continue
+		if frappe.db.get_value("User", user, "enabled"):
+			return user
+	return "Administrator"
+
+
+def ensure_telegram_chat():
+	"""Chat utama dari .env ditautkan ke planner, supaya tombol di pesan
+	alarm langsung bisa dipakai tanpa /mulai KODE."""
+	chat_id = env("SIAGA_TELEGRAM_CHAT_ID")
+	if not chat_id:
+		return
+	if frappe.db.exists("Telegram Chat", {"chat_id": chat_id}):
+		return
+	user = planner_user()
+	if frappe.db.exists("Telegram Chat", {"user": user}):
+		frappe.db.set_value("Telegram Chat", {"user": user},
+			{"chat_id": chat_id, "status": "Tertaut", "linked_on": now_datetime()})
+	else:
+		frappe.get_doc({
+			"doctype": "Telegram Chat", "user": user, "chat_id": chat_id,
+			"status": "Tertaut", "linked_on": now_datetime(),
+		}).insert(ignore_permissions=True)
+	step("chat Telegram utama ditautkan ke %s" % user)
+
+
+# ---- 5. data demo ----
 
 def ensure(doctype, name, doc):
 	if frappe.db.exists(doctype, name):

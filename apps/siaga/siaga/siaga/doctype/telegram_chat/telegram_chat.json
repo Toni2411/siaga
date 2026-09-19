@@ -1,0 +1,151 @@
+{
+ "actions": [],
+ "autoname": "field:user",
+ "creation": "2026-09-19 08:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "user",
+  "full_name",
+  "column_break_a1",
+  "status",
+  "link_code",
+  "telegram_section",
+  "chat_id",
+  "telegram_name",
+  "column_break_b1",
+  "linked_on",
+  "last_seen",
+  "percakapan_section",
+  "pending"
+ ],
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User ERPNext",
+   "options": "User",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "full_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Nama",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_a1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Menunggu tautan",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Menunggu tautan\nTertaut\nNonaktif"
+  },
+  {
+   "description": "Kirim <b>/mulai KODE</b> ke bot dari HP untuk menautkan chat ini.",
+   "fieldname": "link_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Kode Tautan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "telegram_section",
+   "fieldtype": "Section Break",
+   "label": "Telegram"
+  },
+  {
+   "fieldname": "chat_id",
+   "fieldtype": "Data",
+   "label": "Chat ID",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "telegram_name",
+   "fieldtype": "Data",
+   "label": "Nama di Telegram",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_b1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "linked_on",
+   "fieldtype": "Datetime",
+   "label": "Tertaut Pada",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_seen",
+   "fieldtype": "Datetime",
+   "label": "Pesan Terakhir",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "percakapan_section",
+   "fieldtype": "Section Break",
+   "label": "Percakapan Berjalan"
+  },
+  {
+   "description": "Langkah yang sedang menunggu jawaban di chat, misalnya catatan penyelesaian work order. Kosong berarti tidak ada.",
+   "fieldname": "pending",
+   "fieldtype": "Small Text",
+   "label": "Menunggu Jawaban",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-19 08:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SIAGA",
+ "name": "Telegram Chat",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Maintenance Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
