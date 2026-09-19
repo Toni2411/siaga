@@ -30,6 +30,9 @@ API = "https://api.telegram.org/bot{token}/{method}"
 
 
 def config():
+	if frappe.flags.in_test:
+		# Tes tidak boleh mengirim apa pun ke Telegram sungguhan.
+		return None, None
 	token = os.environ.get("SIAGA_TELEGRAM_TOKEN") or frappe.conf.get("siaga_telegram_token")
 	chat_id = os.environ.get("SIAGA_TELEGRAM_CHAT_ID") or frappe.conf.get("siaga_telegram_chat_id")
 	return token, chat_id

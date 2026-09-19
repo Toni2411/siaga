@@ -73,16 +73,21 @@ def handle_update(update):
 		return {"ignored": True}
 
 	caller = frappe.session.user
+	# Aksi yang ditolak dibatalkan sampai titik ini saja, bukan seluruh
+	# transaksi, supaya jejak "pesan terakhir" dan catatan galat tetap tersimpan.
+	frappe.db.savepoint("telegram_update")
 	try:
 		session.dispatch()
 	except (frappe.ValidationError, frappe.PermissionError, frappe.DoesNotExistError) as e:
 		# Ditolak aturan bisnis atau izin: balas alasannya ke chat, catat ringkas.
-		frappe.db.rollback()
+		frappe.db.rollback(save_point="telegram_update")
 		frappe.clear_messages()
-		frappe.log_error(title="SIAGA Telegram bot ditolak", message="%s | %s | %s" % (session.chat_id, session.text, e))
-		session.reply("⚠️ " + html.escape(strip_html(str(e))))
+		if not frappe.flags.in_test:  # Error Log di-commit terpisah dan tidak ikut digulung balik
+			frappe.log_error(title="SIAGA Telegram bot ditolak", message="%s | %s | %s" % (session.chat_id, session.text, e))
+		reason = strip_html(str(e)) or (_("Tidak punya izin untuk ini") if isinstance(e, frappe.PermissionError) else _("Ditolak"))
+		session.reply("⚠️ " + html.escape(reason))
 	except Exception:
-		frappe.db.rollback()
+		frappe.db.rollback(save_point="telegram_update")
 		frappe.log_error(title="SIAGA Telegram bot", message=frappe.get_traceback())
 		session.reply("⚠️ Terjadi galat di sisi server. Sudah dicatat.")
 	finally:

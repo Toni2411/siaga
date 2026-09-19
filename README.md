@@ -191,22 +191,29 @@ python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --c
 ## Susunan repo
 
 ```
-apps/siaga/          app Frappe: 10 DocType, otomasi, stok, forecast, bot Telegram, bootstrap, 2 laporan
+apps/siaga/          app Frappe: 10 DocType, otomasi, stok, forecast, bot Telegram, 2 laporan   (26 tes)
 services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (46 tes)
 services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik                     (4 tes)
 services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
 services/telegram/   relay long polling Telegram → ERPNext, tanpa logika            (4 tes)
 docker/              Dockerfile ERPNext + app, skema TimescaleDB, Mosquitto
-scripts/             init_env, prepare_dataset, reset_demo, telegram_chat_id
+scripts/             init_env, prepare_dataset, reset_demo, test_app, telegram_chat_id
 docs/                tulisan teknis dan naskah demo
 PRD SIAGA.md         dokumen produk, termasuk keputusan yang berubah dan alasannya
 ```
 
-Tes tanpa Docker:
+Tes service, tanpa Docker (inilah yang dijalankan CI):
 
 ```bash
 python -m venv .venv && .venv/Scripts/python.exe -m pip install -e services/edge -e services/gateway -e services/ai -e services/telegram pytest
 for d in edge gateway ai telegram; do (cd services/$d && ../../.venv/Scripts/python.exe -m pytest -q); done
+```
+
+Tes app Frappe, di dalam stack yang sedang jalan (26 tes: aturan pemicu dan histeresis,
+reservasi dan penutupan work order, forecast, bot Telegram sampai batas izinnya):
+
+```bash
+bash scripts/test_app.sh          # bench run-tests --app siaga, semuanya digulung balik
 ```
 
 ## Berikutnya
