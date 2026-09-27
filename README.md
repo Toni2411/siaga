@@ -49,6 +49,12 @@ Setelah perbaikan, mekanik menutup work order dan mencatat *apa yang sebenarnya 
 dari form ERPNext, atau dari HP lewat tombol di pesan Telegram. Catatan itu jadi label, dan
 laporan **Lead Time Deteksi** membandingkan tebakan sistem dengan kenyataan.
 
+Dari catatan yang sama, laporan **Ketersediaan Alat** menghitung PA, UA, MTBF, dan MTTR per
+unit — angka yang dipakai di rapat pagi site. Jam operasinya diambil dari status alat yang
+dikirim sensor, bukan dari lembar shift yang diisi tangan; availability yang dihitung dari
+kondisi alat sendiri lebih sulit diperdebatkan. Terjemahan seluruh sistem ke bahasa operasi
+tambang ada di [docs/siaga-untuk-operasi-tambang.md](docs/siaga-untuk-operasi-tambang.md).
+
 ## Menjalankan
 
 Butuh Docker Desktop (backend WSL2 di Windows), ~6 GB RAM bebas, ~10 GB disk.
@@ -136,6 +142,10 @@ Keputusan yang mengikat:
   digabung jarak z robust per ciri, keduanya dikalibrasi ke tepi baseline yang sama.
 - **Arus dan suhu disintesis** dengan nilai nominal berderau karena dataset tidak
   memuatnya, ditandai `synthetic` di pesan, dan dikecualikan dari model.
+- **Durasi perbaikan di data demo adalah ilustrasi.** Dataset merekam rig yang berjalan
+  sampai gagal; tidak ada peristiwa perbaikan di dalamnya, jadi lama respons dan lama
+  perbaikan yang dipakai laporan ketersediaan adalah angka yang masuk akal untuk site,
+  bukan hasil pengukuran. Laporannya menyebut itu di atas tabel.
 - **Proyeksi hari ke ambang adalah ekstrapolasi tren linear**, bukan model sisa umur.
   Regresi RUL butuh data run-to-failure yang banyak; proyek ini tidak memilikinya. Dan
   ia terlalu optimis pada degradasi yang mempercepat: proyeksi "5 hari" untuk Unit 01
@@ -202,14 +212,14 @@ python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --c
 ## Susunan repo
 
 ```
-apps/siaga/          app Frappe: 11 DocType, otomasi, stok, forecast, bot Telegram, agen, 2 laporan (38 tes)
-services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (46 tes)
+apps/siaga/          app Frappe: 11 DocType, otomasi, stok, forecast, bot Telegram, agen, 3 laporan (47 tes)
+services/edge/       virtual edge: replay IMS, DSP, 25 ciri, kontrak pesan MQTT    (47 tes)
 services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik                     (4 tes)
 services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
 services/telegram/   relay long polling Telegram → ERPNext, tanpa logika            (5 tes)
 docker/              Dockerfile ERPNext + app, skema TimescaleDB, Mosquitto
 scripts/             init_env, prepare_dataset, reset_demo, test_app, telegram_chat_id
-docs/                tulisan teknis dan naskah demo
+docs/                tulisan teknis, sisi operasi tambang, naskah demo
 PRD SIAGA.md         dokumen produk, termasuk keputusan yang berubah dan alasannya
 ```
 
@@ -220,9 +230,9 @@ python -m venv .venv && .venv/Scripts/python.exe -m pip install -e services/edge
 for d in edge gateway ai telegram; do (cd services/$d && ../../.venv/Scripts/python.exe -m pytest -q); done
 ```
 
-Tes app Frappe, di dalam stack yang sedang jalan (38 tes: aturan pemicu dan histeresis,
-reservasi dan penutupan work order, forecast, bot Telegram sampai batas izinnya, agen dengan
-LLM palsu):
+Tes app Frappe, di dalam stack yang sedang jalan (47 tes: aturan pemicu dan histeresis,
+reservasi dan penutupan work order, forecast, ketersediaan alat, bot Telegram sampai batas
+izinnya, agen dengan LLM palsu):
 
 ```bash
 bash scripts/test_app.sh          # bench run-tests --app siaga, semuanya digulung balik

@@ -6,20 +6,25 @@ pembelian, tanpa tangan manusia, di ERP yang sungguhan.**
 ## Persiapan sebelum merekam
 
 ```bash
-bash scripts/reset_demo.sh           # semua ke titik awal
+bash scripts/reset_demo.sh           # semua ke titik awal, stok ikut diisi ulang
 REPLAY_SPEED=0 docker compose --profile replay run --rm edge   # riwayat 7 hari sudah di Timescale
+# tunggu satu siklus AI, lalu tutup satu work order seperti mekanik menutupnya:
+docker compose exec backend bench --site siaga.localhost execute   siaga.demo.close_alarm_work_order --kwargs '{"asset_name": "Pompa Dewatering Unit 01"}'
 ```
 
-Tunggu satu siklus AI (30 s). Pastikan: 4 profil *Dipantau*, 4 work order otomatis
-*Terbuka*, 1 Material Request *Pending*, notifikasi Telegram sudah masuk. Buka tab
-browser berikut lebih dulu, urut:
+Langkah terakhir perlu, karena laporan Lead Time Deteksi dan Ketersediaan Alat keduanya
+bertumpu pada catatan mekanik: tanpa satu pun pekerjaan yang selesai, keduanya kosong.
+
+Pastikan: 4 profil *Dipantau*, 4 work order otomatis (satu sudah *Selesai*), 1 Material
+Request *Pending*, notifikasi Telegram sudah masuk. Buka tab browser berikut lebih dulu, urut:
 
 1. `localhost:8080/app/siaga` — workspace
 2. Asset → Pompa Dewatering Unit 01, gulir ke *Tren Kondisi*
 3. SIAGA Work Order → WO otomatis untuk Unit 01
 4. Material Request → draft Pending, dan laporan Forecast Part
 5. Laporan Lead Time Deteksi
-6. HP dengan Telegram terbuka, atau tangkapan layarnya
+6. Laporan Ketersediaan Alat, rentang seluruh data
+7. HP dengan Telegram terbuka, atau tangkapan layarnya
 
 Jangan merekam proses replay; itu 16 menit membosankan. Rekam *keadaan setelahnya* dan
 ceritakan apa yang terjadi.

@@ -9,10 +9,12 @@ DSN diambil dari site config: siaga_timescale_dsn.
 """
 
 from contextlib import contextmanager
+from datetime import timezone
+from zoneinfo import ZoneInfo
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, now_datetime
+from frappe.utils import add_to_date, get_datetime, get_system_timezone, now_datetime
 
 DEFAULT_FEATURES = ["vib_rms", "bpfo_energy", "bpfi_energy", "vib_kurtosis"]
 
@@ -33,6 +35,28 @@ def timescale():
 		yield conn
 	finally:
 		conn.close()
+
+
+def to_utc(value):
+	"""Waktu ERPNext (naif, zona waktu site) menjadi waktu sadar zona dalam UTC.
+
+	TimescaleDB menyimpan timestamptz dan sesinya berjalan di UTC, sedangkan
+	seluruh waktu di ERPNext memakai zona site (misalnya Asia/Jakarta). Tanpa
+	konversi ini, jendela waktu apa pun meleset sebesar offset zona.
+	"""
+	dt = get_datetime(value)
+	if dt.tzinfo is None:
+		dt = dt.replace(tzinfo=ZoneInfo(get_system_timezone()))
+	return dt.astimezone(timezone.utc)
+
+
+def to_site_tz(dt):
+	"""Kebalikannya: waktu dari Timescale menjadi waktu naif zona site, untuk ditampilkan."""
+	if dt is None:
+		return None
+	if dt.tzinfo is None:
+		dt = dt.replace(tzinfo=timezone.utc)
+	return dt.astimezone(ZoneInfo(get_system_timezone())).replace(tzinfo=None)
 
 
 def source_for(asset):
@@ -64,7 +88,7 @@ def get_trend(asset, features=None, hours=168, normalize=1):
 	features = list(features or DEFAULT_FEATURES)
 	source = source_for(asset)
 	bucket = bucket_for(hours)
-	since = add_to_date(now_datetime(), hours=-hours)
+	since = to_utc(add_to_date(now_datetime(), hours=-hours))
 
 	with timescale() as conn, conn.cursor() as cur:
 		cur.execute(
@@ -97,7 +121,7 @@ def get_trend(asset, features=None, hours=168, normalize=1):
 		"source_id": source,
 		"bucket": bucket,
 		"normalized": bool(int(normalize)),
-		"labels": [b.strftime("%d/%m %H:%M") for b in buckets],
+		"labels": [to_site_tz(b).strftime("%d/%m %H:%M") for b in buckets],
 		"datasets": [{"name": f, "values": series[f]} for f in features],
 	}
 
@@ -120,7 +144,7 @@ def latest(asset):
 			(source, state[0]),
 		)
 		feats = {f: float(v) for f, v in cur.fetchall()}
-	return {"source_id": source, "ts": state[0].isoformat(), "state": state[1], "features": feats}
+	return {"source_id": source, "ts": to_site_tz(state[0]).isoformat(), "state": state[1], "features": feats}
 
 
 @frappe.whitelist()
