@@ -117,10 +117,18 @@ def get_trend(asset, features=None, hours=168, normalize=1):
 			if mean > 0:
 				series[f] = [None if v is None else round(v / mean, 3) for v in values]
 
+	last_ts = None
+	if not buckets:
+		with timescale() as conn, conn.cursor() as cur:
+			cur.execute("select max(ts) from sensor_reading where source_id = %s", (source,))
+			row = cur.fetchone()
+			last_ts = to_site_tz(row[0]).strftime("%d/%m/%Y %H:%M") if row and row[0] else None
+
 	return {
 		"source_id": source,
 		"bucket": bucket,
 		"normalized": bool(int(normalize)),
+		"last_ts": last_ts,
 		"labels": [to_site_tz(b).strftime("%d/%m %H:%M") for b in buckets],
 		"datasets": [{"name": f, "values": series[f]} for f in features],
 	}
@@ -172,10 +180,14 @@ def get_health(asset, hours=168):
 	# Jarangkan supaya grafik tetap ringan: maksimal sekitar 300 titik.
 	step = max(1, len(rows) // 300)
 	rows = rows[::step]
+	# Skor terakhir di luar jendela ikut dikirim supaya tampilan kosong bisa
+	# membedakan "belum pernah dinilai" dari "tidak ada di rentang ini".
+	last_at = frappe.db.get_value("Health Score", {"asset": asset}, "scored_at", order_by="scored_at desc")
 	return {
 		"labels": [r.scored_at.strftime("%d/%m %H:%M") for r in rows],
 		"scores": [r.score for r in rows],
 		"work_orders": [r.work_order for r in rows],
 		"thresholds": thresholds,
 		"profile": profile,
+		"last_score_at": last_at.strftime("%d/%m/%Y %H:%M") if last_at else None,
 	}

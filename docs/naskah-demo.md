@@ -15,6 +15,10 @@ docker compose exec backend bench --site siaga.localhost execute   siaga.demo.cl
 Langkah terakhir perlu, karena laporan Lead Time Deteksi dan Ketersediaan Alat keduanya
 bertumpu pada catatan mekanik: tanpa satu pun pekerjaan yang selesai, keduanya kosong.
 
+**Jalankan replay pada hari perekaman.** Replay memasang cap waktu yang berakhir "sekarang",
+jadi data yang diputar seminggu lalu membuat tab *24 jam* dan *7 hari* di grafik kosong —
+grafiknya hanya terlihat di *30 hari*. Dengan replay yang segar, ketiga rentang terisi.
+
 Pastikan: 4 profil *Dipantau*, 4 work order otomatis (satu sudah *Selesai*), 1 Material
 Request *Pending*, notifikasi Telegram sudah masuk. Buka tab browser berikut lebih dulu, urut:
 

@@ -55,7 +55,12 @@ function siaga_render_trend(frm) {
 		}).then((res) => {
 			const d = res.message;
 			if (!d.scores.length) {
-				$health.html(`<div class="text-muted small">${__("Belum ada skor kesehatan. Status: ")}${d.profile.monitoring_status || "-"}</div>`);
+				// Bedakan "belum pernah dinilai" dari "ada, tapi di luar rentang ini":
+				// data demo berumur beberapa hari akan mengosongkan rentang pendek.
+				const msg = d.last_score_at
+					? __("Tidak ada skor di rentang ini. Skor terakhir {0} — pilih rentang yang lebih panjang.", [d.last_score_at])
+					: __("Belum ada skor kesehatan. Status: {0}", [d.profile.monitoring_status || "-"]);
+				$health.html(`<div class="text-muted small">${msg}</div>`);
 				return;
 			}
 			const markers = [];
@@ -83,7 +88,10 @@ function siaga_render_trend(frm) {
 		}).then((res) => {
 			const data = res.message;
 			if (!data.labels.length) {
-				$chart.html(`<div class="text-muted small">${__("Belum ada data dalam rentang ini.")}</div>`);
+				const msg = d.last_ts
+					? __("Tidak ada data di rentang ini. Cuplikan terakhir {0} — pilih rentang yang lebih panjang.", [d.last_ts])
+					: __("Belum ada data sensor untuk aset ini.");
+				$chart.html(`<div class="text-muted small">${msg}</div>`);
 				return;
 			}
 			new frappe.Chart($chart[0], {
