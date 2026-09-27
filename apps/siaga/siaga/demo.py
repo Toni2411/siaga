@@ -153,9 +153,18 @@ def close_alarm_work_order(asset_name=None, failure_mode="Bearing outer race", n
 	)
 	# Cap waktu pekerjaan dirapikan ke jeda yang masuk akal: mekanik berangkat
 	# dua jam setelah alarm, perbaikan tiga setengah jam.
+	now = now_datetime()
 	started = add_to_date(failed_on, hours=RESPONSE_HOURS)
-	wo.db_set({"started_on": started, "completed_on": add_to_date(started, hours=REPAIR_HOURS)})
+	finished = add_to_date(started, hours=REPAIR_HOURS)
+	if finished > now:
+		# Replay menaruh ujung data di "sekarang", jadi jeda respons dan
+		# perbaikan bisa jatuh di masa depan. Pekerjaan yang selesai besok
+		# tidak masuk akal dan membuat laporan ketersediaan salah, jadi
+		# digeser mundur sampai berakhir sekarang tanpa mulai sebelum rusak.
+		finished = now
+		started = max(failed_on, add_to_date(now, hours=-REPAIR_HOURS))
+	wo.db_set({"started_on": started, "completed_on": finished})
 	frappe.db.commit()
 	print("work order %s (%s) ditutup: %s, mulai %s, selesai %s" % (
-		wo.name, wo.asset_name, failure_mode, started, add_to_date(started, hours=REPAIR_HOURS)))
+		wo.name, wo.asset_name, failure_mode, started, finished))
 	return wo.name
