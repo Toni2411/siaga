@@ -170,7 +170,7 @@ Keputusan yang mengikat:
 ## Hasil terukur
 
 Dua dataset IMS, konfigurasi kelas yang sama (baseline 3 hari, ambang 40/55, tiga siklus).
-Set 1 tidak pernah dipakai saat menyetel apa pun. Dihasilkan `python -m siaga_ai.evaluate`.
+Set 1 tidak pernah dipakai saat menyetel apa pun. Dihasilkan `bash scripts/evaluate.sh`.
 
 | Dataset | Unit | Kenyataan | Sehat med / p05 | Memicu | Lead time | Tebakan |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -204,9 +204,16 @@ Mengulang angkanya sendiri, tanpa Docker:
 
 ```bash
 python scripts/prepare_dataset.py --set 2 && python scripts/prepare_dataset.py --set 1
+bash scripts/evaluate.sh     # kedua dataset; beri argumen 2 atau 1 untuk satu saja
+```
+
+Skrip itu memakai Python dari `.venv` dan menjalankan harness dari `services/ai`.
+Dipanggil langsung, keduanya harus benar — dari folder root dengan Python sistem
+hasilnya `ModuleNotFoundError`:
+
+```bash
 cd services/ai
-python -m siaga_ai.evaluate --cache ../../data/cache/ims_2nd_test_3200hz.npz --failed 0:bpfo --baseline-days 3
-python -m siaga_ai.evaluate --cache ../../data/cache/ims_1st_test_3200hz.npz --channels 0,2,4,6 --failed 2:bpfi,3:bsf --baseline-days 3
+../../.venv/Scripts/python.exe -m siaga_ai.evaluate   --cache ../../data/cache/ims_2nd_test_3200hz.npz --failed 0:bpfo --baseline-days 3
 ```
 
 ## Susunan repo
@@ -218,7 +225,7 @@ services/gateway/    MQTT → TimescaleDB, batch ~400 pesan/detik               
 services/ai/         model per unit, skor, proyeksi, penjelasan, harness evaluasi  (20 tes)
 services/telegram/   relay long polling Telegram → ERPNext, tanpa logika            (5 tes)
 docker/              Dockerfile ERPNext + app, skema TimescaleDB, Mosquitto
-scripts/             init_env, prepare_dataset, reset_demo, test_app, telegram_chat_id
+scripts/             init_env, prepare_dataset, reset_demo, evaluate, test_app, telegram_chat_id
 docs/                tulisan teknis, sisi operasi tambang, naskah demo
 PRD SIAGA.md         dokumen produk, termasuk keputusan yang berubah dan alasannya
 ```
