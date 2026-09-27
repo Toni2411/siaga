@@ -44,8 +44,10 @@ OPEN_STATUSES = ("Terbuka", "Dikerjakan")
 def operating_hours(source_id, start, end):
 	"""Jam alat berjalan menurut status operasi dari edge.
 
-	None kalau TimescaleDB tidak bisa dihubungi, supaya laporan tetap bisa
-	menampilkan kolom lain dan bukan gagal seluruhnya.
+	None kalau TimescaleDB tidak bisa dihubungi, atau kalau tidak ada satu pun
+	cuplikan di jendela ini. Membedakan keduanya dari nol penting: "tidak ada
+	data" bukan "alat tidak pernah jalan", dan menampilkannya sebagai nol
+	membuat UA 0% yang menyesatkan.
 	"""
 	from siaga.api.timeseries import timescale, to_utc
 
@@ -55,7 +57,8 @@ def operating_hours(source_id, start, end):
 			from operating_state
 			where source_id = %s and ts >= %s and ts < %s
 		)
-		select coalesce(sum(least(extract(epoch from (next_ts - ts)), %s)), 0) / 3600.0
+		select coalesce(sum(least(extract(epoch from (next_ts - ts)), %s)), 0) / 3600.0,
+		       count(*)
 		from s
 		where state = any(%s) and next_ts is not null
 	"""
@@ -63,7 +66,9 @@ def operating_hours(source_id, start, end):
 		with timescale() as conn, conn.cursor() as cur:
 			cur.execute(sql, (source_id, to_utc(start), to_utc(end), MAX_SAMPLE_GAP_S, list(RUNNING_STATES)))
 			row = cur.fetchone()
-			return flt(row[0]) if row else 0.0
+			if not row or not row[1]:
+				return None
+			return flt(row[0])
 	except Exception:
 		frappe.log_error(title="SIAGA ketersediaan: Timescale", message=frappe.get_traceback())
 		return None
@@ -143,6 +148,7 @@ def for_asset(asset, start, end, source_id=None, asset_name=None):
 		# kerusakan sengaja ikut ditampilkan supaya pembaca tahu dasarnya.
 		mtbf=(operating / failures) if operating is not None and failures else None,
 		mttr=(repair / repairs) if repairs else None,
+		no_sensor_data=running is None,
 	)
 
 

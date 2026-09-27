@@ -43,12 +43,15 @@ def message(rows):
 	"""Catatan di atas tabel: dari mana angkanya, dan apa yang belum dihitung."""
 	sedikit = [r.asset_name for r in rows if r.failures and r.failures < 3]
 	bentrok = [r.asset_name for r in rows if r.operating_capped]
+	kosong = [r.asset_name for r in rows if r.no_sensor_data]
 	catatan = [
 		_("Jam operasi dihitung dari status operasi yang dikirim edge tiap cuplikan, bukan dari entri manual."),
 		_("Seluruh downtime di sini bersifat korektif; servis berkala belum ada di data demo, dan pada armada sungguhan keduanya dipisah."),
 	]
 	if sedikit:
 		catatan.append(_("MTBF pada {0} dihitung dari kurang dari tiga kerusakan, jadi belum berarti secara statistik.").format(", ".join(sedikit)))
+	if kosong:
+		catatan.insert(0, _("Tidak ada cuplikan sensor di rentang ini untuk {0}; jam operasi, UA, MA, dan MTBF tidak bisa dihitung. Pilih rentang yang memuat data.").format(", ".join(kosong)))
 	if bentrok:
 		catatan.append(_("Pada {0} sensor masih menyatakan alat berjalan selama jam perbaikan; jam operasi dibatasi pada jam tersedia.").format(", ".join(bentrok)))
 	return "<br>".join("• " + c for c in catatan)

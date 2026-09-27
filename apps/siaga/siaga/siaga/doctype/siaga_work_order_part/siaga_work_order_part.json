@@ -45,7 +45,7 @@
    "options": "Warehouse"
   },
   {
-   "description": "Stok aktual dikurangi reservasi aktif work order lain",
+   "description": "Cap stok tersedia saat work order terakhir disimpan, bukan angka saat ini. Angka terkini ada di laporan Forecast Part.",
    "fieldname": "stock_available",
    "fieldtype": "Float",
    "in_list_view": 1,

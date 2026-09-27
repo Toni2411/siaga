@@ -127,6 +127,17 @@ class TestAvailability(SiagaTestCase):
 		self.assertIsNone(row.mtbf)
 		self.assertIsNotNone(row.pa, "PA tetap bisa dihitung dari work order saja")
 
+	def test_window_without_sensor_samples_reports_unknown_not_zero(self):
+		"""Rentang di luar jangkauan data: UA 0% menyesatkan, harus kosong dan ditandai."""
+		availability.operating_hours = lambda source_id, start, end: None
+		start, end = self.window()
+		row = availability.for_asset(self.env.asset, start, end)
+		self.assertTrue(row.no_sensor_data)
+		self.assertIsNone(row.operating_hours)
+		self.assertIsNone(row.ua)
+		self.assertIsNone(row.mtbf)
+		self.assertAlmostEqual(row.pa, 100.0, places=1, msg="PA tetap terhitung dari work order")
+
 	def test_table_lists_monitored_units_worst_first(self):
 		self.repaired(20, 10)  # 10 jam downtime di unit uji
 		start, end = self.window()
