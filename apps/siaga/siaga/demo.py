@@ -81,8 +81,15 @@ def reset_automation():
 
 	frappe.db.sql("update `tabAsset Monitoring Profile` set alarm_state='Normal', alarm_since=NULL, last_auto_work_order=NULL")
 	frappe.db.sql("update `tabTelegram Chat` set pending=NULL")
+
+	# Komponen yang ditandai Diganti saat work order ditutup dikembalikan ke
+	# Terpasang. Tanpa ini, putaran demo berikutnya tidak menemukan komponen
+	# terpasang untuk dicantumkan di work order, dan kolom komponen jadi kosong.
+	restored = frappe.db.count("Asset Component", {"status": "Diganti"})
+	frappe.db.sql("update `tabAsset Component` set status = 'Terpasang', replaced_on = NULL where status = 'Diganti'")
 	frappe.db.commit()
 	restock()
+	print("komponen dikembalikan ke Terpasang: %d" % restored)
 	print("work order otomatis dibatalkan: %d | draft MR dihapus: %d | catatan kerusakan dihapus: %d | notifikasi dihapus: %d" % (cancelled, deleted, len(logs), notifications))
 
 
