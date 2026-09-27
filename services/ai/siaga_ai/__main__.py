@@ -45,15 +45,17 @@ def main(argv=None) -> int:
         log.error("ERPNext tidak pernah siap di %s", settings.erpnext_url)
         return 1
 
-    conn = None
-    for attempt in range(60):
-        try:
-            conn = connect(settings.timescale_dsn)
-            break
-        except Exception as e:
-            if attempt % 6 == 0:
-                log.warning("TimescaleDB belum siap (%s), menunggu", str(e).splitlines()[0][:120])
-            time.sleep(5)
+    def open_timescale(attempts=60, quiet=False):
+        for attempt in range(attempts):
+            try:
+                return connect(settings.timescale_dsn)
+            except Exception as e:
+                if not quiet and attempt % 6 == 0:
+                    log.warning("TimescaleDB belum siap (%s), menunggu", str(e).splitlines()[0][:120])
+                time.sleep(5)
+        return None
+
+    conn = open_timescale()
     if conn is None:
         log.error("TimescaleDB tidak pernah siap")
         return 1
@@ -74,6 +76,16 @@ def main(argv=None) -> int:
         except Exception as e:  # ERPNext atau database sedang tidak bisa dihubungi
             log.warning("siklus dilewati: %s", str(e).splitlines()[0][:160])
             results = []
+            # Koneksi bisa diputus dari luar: reset demo memutus semua sesi ke
+            # database supaya TRUNCATE bisa mengambil kuncinya. Tanpa menyambung
+            # ulang, service ini diam selamanya sampai container direstart.
+            if getattr(conn, "closed", 0):
+                log.warning("koneksi TimescaleDB tertutup, menyambung ulang")
+                new_conn = open_timescale(attempts=12, quiet=True)
+                if new_conn is not None:
+                    conn = new_conn
+                    pipeline.conn = conn
+                    log.info("koneksi TimescaleDB pulih")
         for r in results:
             log.info("%s: %s -> %s | %s%s", r.asset, r.status_before, r.status_after, r.note,
                      " | model baru" if r.trained else "")
